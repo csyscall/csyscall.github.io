@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Leaflet地图</title>
+  <style type="text/css">
+    html {
+      height: 100%
+    }
+
+    body {
+      height: 100%;
+      margin: 0px;
+      padding: 0px
+    }
+
+    #container {
+      height: 100%
+    }
+  </style>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+</head>
+<style type="text/css"></style>
+
+<body>
+  <div id="container"></div>
+</body>
+<script src="https://webapi.amap.com/maps?v=2.0&key=8ecb203a5a322747646dd94fd58c6306"></script>
+<script>
+  var map = L.map('container', {
+    center: {lat: 34.54083333, lng: 108.9236111},
+    zoom: 4,
+  })
+  L.tileLayer('https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&hl=zh-CN&gl=CN&x={x}&y={y}&z={z}', {
+    maxZoom: 20,
+    attribution: '© GoogleMap'
+  }).addTo(map);
+  L.tileLayer('https://wprd02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8', {
+    maxZoom: 20,
+  }).addTo(map);
+
+    // $.get('/public/ycx.geojson', function (data, status) {
+    //     //console.log(data);
+    //     L.geoJSON(data, {
+    //         style: {
+    //             "color": "#ff0000",
+    //             "weight": 5,
+    //             "opacity": 0.99
+    //         }
+    //     }).addTo(map);
+    // });
+
+</script>
+
+</html>
