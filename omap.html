@@ -47,8 +47,7 @@
     <div class="input-card" style="width: auto;">
         <div class="input-item">
             <div><button class="btn" onclick="f(this)">隐藏路网</button></div>
-	    <div><button class='btn' onclick='f(this)'>隐藏疑点</button></div>
-	    <div><button class='btn' onclick='getPosition()'>获取位置</button></div>
+	        <div><button class='btn' onclick='getPosition()'>获取位置</button></div>
         </div>
     </div>
     <script>
@@ -63,7 +62,7 @@
                 roadNet.setVisible(true);
             }
         }
-        var chinaZeroPoint = [108.923611111111, 34.5408333333333];
+        var chinaZeroPoint = [108.9236111, 34.54083333];
         var map = new ol.Map({
             target: 'container',
             layers: [
@@ -102,7 +101,7 @@
             ],
             view: new ol.View({
                 projection: "EPSG:3857",
-                center: chinaZeroPoint,
+                center: ol.proj.fromLonLat(chinaZeroPoint),
                 zoom: 4,
                 minZoom: 0,
                 maxZoom: 20
@@ -152,50 +151,53 @@
                 })
             }),
         });
+
+        //view.setCenter(chinaZeroPoint);
         //将绘制层添加到地图容器中
-        map.addLayer(customVectorLayer);
-        var features = [];
-        lkx.RECORDS.forEach(element => {
-            var feature = format.readFeature(element.空间信息, {
-                featureProjection: view.getProjection(),
-                dataProjection: view.getProjection(),
-            });
-            feature['rwbm'] = element.任务编码;
-            feature.setStyle(new ol.style.Style({
-                //文字样式
-                text: new ol.style.Text({
-                    font: '14px',
-                    text: element.任务编码,
-                    fill: new ol.style.Fill({
-                        color: 'rgba(255, 255, 255, 1)',
-                    }),
-                }),
-                //边框样式
-                stroke: new ol.style.Stroke({
-                    color: 'red',
-                    width: 3,
-                    //lineDash: [3, 5]
-                }),
-                //填充样式
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.3)',
-                }),
-            }));
-            features.push(feature);
-        });
+        // map.addLayer(customVectorLayer);
+        // var features = [];
+        // lkx.RECORDS.forEach(element => {
+        //     var feature = format.readFeature(element.空间信息, {
+        //         featureProjection: view.getProjection(),
+        //         dataProjection: view.getProjection(),
+        //     });
+        //     feature['rwbm'] = element.任务编码;
+        //     feature.setStyle(new ol.style.Style({
+        //         //文字样式
+        //         text: new ol.style.Text({
+        //             font: '14px',
+        //             text: element.任务编码,
+        //             fill: new ol.style.Fill({
+        //                 color: 'rgba(255, 255, 255, 1)',
+        //             }),
+        //         }),
+        //         //边框样式
+        //         stroke: new ol.style.Stroke({
+        //             color: 'red',
+        //             width: 3,
+        //             //lineDash: [3, 5]
+        //         }),
+        //         //填充样式
+        //         fill: new ol.style.Fill({
+        //             color: 'rgba(0, 0, 255, 0.3)',
+        //         }),
+        //     }));
+        //     features.push(feature);
+        // });
         //customVectorLayer.getSource().addFeatures(features);
         
         // view.setCenter([114.9999, 34.8717]);
         // view.setZoom(12);
-        // map.on('singleclick', (e) => {
-        //     console.log(e.coordinate);
-        //     urlh='http://api.map.baidu.com/marker?location=';
-        //     url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
-        //     if(browser.versions.ios) urlh='baidumap://map/marker?location=';
-        //     if(browser.versions.android) urlh='bdapp://map/marker?location=';
-        //     console.log(urlh+url);
-        //     window.location.href=urlh+url;
-        // });
+        map.on('singleclick', (e) => {
+            console.log(ol.proj.toLonLat(e.coordinate));
+            alert("当前位置："+ol.proj.toLonLat(e.coordinate));
+            // urlh='http://api.map.baidu.com/marker?location=';
+            // url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
+            // if(browser.versions.ios) urlh='baidumap://map/marker?location=';
+            // if(browser.versions.android) urlh='bdapp://map/marker?location=';
+            //console.log(urlh+url);
+            //window.location.href=urlh+url;
+        });
 
 //判断访问终端
 var browser={
@@ -257,7 +259,7 @@ var browser={
                 )
             }
         }
-        getPosition();
+        //getPosition();
 
         //定义一些常量
         var x_PI = 3.14159265358979324 * 3000.0 / 180.0;
