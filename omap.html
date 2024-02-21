@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>OpenLayers地图</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">    
+    <style>
+        body,
+        html,
+        #container {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: "微软雅黑";
+            margin: 0;
+            padding: 0;
+        }
+
+        .input-card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border-radius: .25rem;
+            width: 22rem;
+            border-width: 0;
+            border-radius: 0.4rem;
+            box-shadow: 0 2px 6px 0 rgba(114, 124, 245, .5);
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            -ms-flex: 1 1 auto;
+            flex: 1 1 auto;
+            padding: 0.5rem 0.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div class="input-card" style="width: auto;">
+        <div class="input-item">
+            <div><button class="btn" onclick="f(this)">隐藏路网</button></div>
+	    <div><button class='btn' onclick='f(this)'>隐藏疑点</button></div>
+	    <div><button class='btn' onclick='getPosition()'>获取位置</button></div>
+        </div>
+    </div>
+    <script>
+        function f(obj) {
+            console.log(obj);
+            if (obj.innerText == '隐藏路网') {
+                obj.innerText = '显示路网';
+                roadNet.setVisible(false);
+            }
+            else if(obj.innerText == '显示路网') {
+                obj.innerText = '隐藏路网';
+                roadNet.setVisible(true);
+            }
+        }
+        var chinaZeroPoint = [108.923611111111, 34.5408333333333];
+        var map = new ol.Map({
+            target: 'container',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        crossOrigin: 'Anonymous',
+                        url: 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&x={x}&y={y}&z={z}'         //谷歌地图影像
+                        //url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'   
+                    }),
+                    visible: true,
+                    zIndex: 1
+                }),
+                new ol.layer.Tile({ //天地图影像注记
+                    source: new ol.source.XYZ({
+                        crossOrigin: 'Anonymous',
+                        url: 'http://t0.tianditu.gov.cn/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=728dcc4fd990d07f0e81b76d49fd8632'
+                    }),
+                    visible: true,
+                    zIndex: 1
+                }),
+                // new ol.layer.Vector({
+                //     zIndex: 10,
+                //     source: new ol.source.Vector({
+                //         projection: 'EPSG:4326',
+                //         url: './lkx.geojson',
+                //         format: new ol.format.GeoJSON()
+                //     }),
+                //     style: new ol.style.Style({
+                //         //边框样式
+                //         stroke: new ol.style.Stroke({
+                //             color: 'red',
+                //             width: 3,
+                //         })
+                //     }),
+                // }),
+            ],
+            view: new ol.View({
+                projection: "EPSG:3857",
+                center: chinaZeroPoint,
+                zoom: 4,
+                minZoom: 0,
+                maxZoom: 20
+            }),
+            controls: ol.control.defaults.defaults().extend([
+                // 添加全屏控件
+                new ol.control.FullScreen(),
+                new ol.control.ZoomSlider()
+            ])
+        });
+        var roadNet = map.getLayers().item(1);
+
+        let view = map.getView();
+        // 数据格式类型
+        let format = new ol.format.WKT();
+        //let feature = format.readFeature(lkxyd.RECORDS[0].空间信息, {
+        //    featureProjection: view.getProjection(),
+        //    dataProjection: view.getProjection(),
+        //});
+
+        //实例化一个矢量图层Vector作为绘制层
+        let source = new ol.source.Vector();
+        //创建一个图层
+        let customVectorLayer = new ol.layer.Vector({
+            source: source,
+            zIndex: 2,
+            //设置样式
+            style: new ol.style.Style({
+                //边框样式
+                stroke: new ol.style.Stroke({
+                    color: 'red',
+                    width: 3,
+                    //lineDash: [3, 5]
+                }),
+                //填充样式
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.3)',
+                }),
+                // 点的样式
+                image: new ol.style.Circle({
+                    // 点半径
+                    radius: 9,
+                    // 点颜色
+                    fill: new ol.style.Fill({
+                        color: 'red',
+                    })
+                })
+            }),
+        });
+        //将绘制层添加到地图容器中
+        map.addLayer(customVectorLayer);
+        var features = [];
+        lkx.RECORDS.forEach(element => {
+            var feature = format.readFeature(element.空间信息, {
+                featureProjection: view.getProjection(),
+                dataProjection: view.getProjection(),
+            });
+            feature['rwbm'] = element.任务编码;
+            feature.setStyle(new ol.style.Style({
+                //文字样式
+                text: new ol.style.Text({
+                    font: '14px',
+                    text: element.任务编码,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 255, 255, 1)',
+                    }),
+                }),
+                //边框样式
+                stroke: new ol.style.Stroke({
+                    color: 'red',
+                    width: 3,
+                    //lineDash: [3, 5]
+                }),
+                //填充样式
+                fill: new ol.style.Fill({
+                    color: 'rgba(0, 0, 255, 0.3)',
+                }),
+            }));
+            features.push(feature);
+        });
+        //customVectorLayer.getSource().addFeatures(features);
+        
+        // view.setCenter([114.9999, 34.8717]);
+        // view.setZoom(12);
+        // map.on('singleclick', (e) => {
+        //     console.log(e.coordinate);
+        //     urlh='http://api.map.baidu.com/marker?location=';
+        //     url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
+        //     if(browser.versions.ios) urlh='baidumap://map/marker?location=';
+        //     if(browser.versions.android) urlh='bdapp://map/marker?location=';
+        //     console.log(urlh+url);
+        //     window.location.href=urlh+url;
+        // });
+
+//判断访问终端
+var browser={
+    versions:function(){
+        var u = navigator.userAgent, 
+            app = navigator.appVersion;
+        return {
+            trident: u.indexOf('Trident') > -1, //IE内核
+            presto: u.indexOf('Presto') > -1, //opera内核
+            webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+            gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1,//火狐内核
+            mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+            ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+            android: u.indexOf('Android') > -1 || u.indexOf('Adr') > -1, //android终端
+            iPhone: u.indexOf('iPhone') > -1 , //是否为iPhone或者QQHD浏览器
+            iPad: u.indexOf('iPad') > -1, //是否iPad
+            webApp: u.indexOf('Safari') == -1, //是否web应该程序，没有头部与底部
+            weixin: u.indexOf('MicroMessenger') > -1, //是否微信 （2015-01-22新增）
+            qq: u.match(/\sQQ/i) == " qq" //是否QQ
+        };
+    }(),
+    language:(navigator.browserLanguage || navigator.language).toLowerCase()
+}
+
+
+        function getPosition() {
+            if (navigator.geolocation) {
+                //navigator.geolocation.getCurrentPosition这个方法里面有三个参数
+                //这个会在界面拉出一个消息框，让用户确认是否允许获取位置,不过pc端我试了都是err，
+                //参1，成功后执行的函数
+                //参2，失败时执行的函数
+                //参3，选项配置，下面是在3000毫秒内结束请求
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        var latitude = position.coords.latitude;//纬度
+                        var longitude = position.coords.longitude;//经度
+                        console.log("Latitude : " + latitude + " Longitude: " + longitude);
+                        // console.log(position);
+                        map.getView().setCenter([longitude, latitude]);
+                        map.getView().setZoom(16);
+                    },
+                    function (error) {
+                        switch (error.code) {
+                            case 1:
+                                console.log('位置服务被拒绝');
+                                break;
+                            case 2:
+                                console.log('暂时获取不到位置信息');
+                                break;
+                            case 3:
+                                console.log('获取信息超时');
+                                break;
+                            case 4:
+                                console.log('未知错误');
+                                break;
+                        }
+                    },
+                    { timeout: 3000 }
+                )
+            }
+        }
+        getPosition();
+
+        //定义一些常量
+        var x_PI = 3.14159265358979324 * 3000.0 / 180.0;
+        var PI = 3.1415926535897932384626;
+        var a = 6378245.0;
+        var ee = 0.00669342162296594323;
+        /**
+          * 百度坐标系 (BD-09) 与 火星坐标系 (GCJ-02)的转换
+          * 即 百度 转 谷歌、高德
+          * @param bd_lon
+          * @param bd_lat
+          * @returns {*[]}
+          */
+        function bd09togcj02(bd_lon, bd_lat) {
+            var x_pi = 3.14159265358979324 * 3000.0 / 180.0;
+            var x = bd_lon - 0.0065;
+            var y = bd_lat - 0.006;
+            var z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * x_pi);
+            var theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * x_pi);
+            var gg_lng = z * Math.cos(theta);
+            var gg_lat = z * Math.sin(theta);
+            return [gg_lng, gg_lat]
+        }
+        /**
+        * 火星坐标系 (GCJ-02) 与百度坐标系 (BD-09) 的转换
+        * 即谷歌、高德 转 百度
+        * @param lng
+        * @param lat
+        * @returns {*[]}
+        */
+        function gcj02tobd09(lng, lat) {
+            var z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_PI);
+            var theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_PI);
+            var bd_lng = z * Math.cos(theta) + 0.0065;
+            var bd_lat = z * Math.sin(theta) + 0.006;
+            return [bd_lng, bd_lat]
+        }
+        /**
+        * WGS84转GCj02
+        * @param lng
+        * @param lat
+        * @returns {*[]}
+        */
+        function wgs84togcj02(lng, lat) {
+            if (out_of_china(lng, lat)) {
+                return [lng, lat]
+            }
+            else {
+                var dlat = transformlat(lng - 105.0, lat - 35.0);
+                var dlng = transformlng(lng - 105.0, lat - 35.0);
+                var radlat = lat / 180.0 * PI;
+                var magic = Math.sin(radlat);
+                magic = 1 - ee * magic * magic;
+                var sqrtmagic = Math.sqrt(magic);
+                dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * PI);
+                dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * PI);
+                var mglat = lat + dlat;
+                var mglng = lng + dlng;
+                return [mglng, mglat]
+            }
+        }
+        /**
+        * GCJ02 转换为 WGS84
+        * @param lng
+        * @param lat
+        * @returns {*[]}
+        */
+        function gcj02towgs84(lng, lat) {
+            if (out_of_china(lng, lat)) {
+                return [lng, lat]
+            }
+            else {
+                var dlat = transformlat(lng - 105.0, lat - 35.0);
+                var dlng = transformlng(lng - 105.0, lat - 35.0);
+                var radlat = lat / 180.0 * PI;
+                var magic = Math.sin(radlat);
+                magic = 1 - ee * magic * magic;
+                var sqrtmagic = Math.sqrt(magic);
+                dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * PI);
+                dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * PI);
+                mglat = lat + dlat;
+                mglng = lng + dlng;
+                return [lng * 2 - mglng, lat * 2 - mglat]
+            }
+        }
+        function transformlat(lng, lat) {
+            var ret = -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * Math.sqrt(Math.abs(lng));
+            ret += (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(lat * PI) + 40.0 * Math.sin(lat / 3.0 * PI)) * 2.0 / 3.0;
+            ret += (160.0 * Math.sin(lat / 12.0 * PI) + 320 * Math.sin(lat * PI / 30.0)) * 2.0 / 3.0;
+            return ret
+        }
+        function transformlng(lng, lat) {
+            var ret = 300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1 * Math.sqrt(Math.abs(lng));
+            ret += (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0;
+            ret += (20.0 * Math.sin(lng * PI) + 40.0 * Math.sin(lng / 3.0 * PI)) * 2.0 / 3.0;
+            ret += (150.0 * Math.sin(lng / 12.0 * PI) + 300.0 * Math.sin(lng / 30.0 * PI)) * 2.0 / 3.0;
+            return ret
+        }
+        /**
+        * 判断是否在国内，不在国内则不做偏移
+        * @param lng
+        * @param lat
+        * @returns {boolean}
+        */
+        function out_of_china(lng, lat) {
+            return (lng < 72.004 || lng > 137.8347) || ((lat < 0.8293 || lat > 55.8271) || false);
+        }
+         /**
+         * WGS84 转换为 BD-09
+         * @param lng
+         * @param lat
+         * @returns {*[]}
+         *
+         */
+        function wgs84tobd09(lng, lat){
+            console.log(lng,lat);
+	    //第一次转换
+            gcj02p = wgs84togcj02(lng,lat);
+	    console.log(gcj02p);
+            //第二次转换
+            bdp = gcj02tobd09(gcj02p[0],gcj02p[1]);
+	    console.log(bdp);
+            return bdp[1]+","+bdp[0];
+        }
+
+        // // 经纬度转瓦片编号
+        // function lon2tile(lon,zoom) {
+        //     return (Math.floor((lon+180)/360*Math.pow(2,zoom)));
+        // }
+        //  function lat2tile(lat,zoom)  {
+        //     return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom)));
+        // }
+        // // 瓦片编号转经纬度
+        // function tile2long(x,z) {
+        //     return (x/Math.pow(2,z)*360-180);
+        //  }
+        //  function tile2lat(y,z) {
+        //     var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+        //     return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+        //  }
+    </script>
+</body>
+
+</html>
