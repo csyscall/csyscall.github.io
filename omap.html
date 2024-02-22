@@ -189,7 +189,7 @@
         // view.setCenter([114.9999, 34.8717]);
         // view.setZoom(12);
         map.on('singleclick', (e) => {
-            console.log(ol.proj.toLonLat(e.coordinate));
+            console.log(e.coordinate,ol.proj.toLonLat(e.coordinate));
             alert("当前位置："+ol.proj.toLonLat(e.coordinate));
             // urlh='http://api.map.baidu.com/marker?location=';
             // url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
