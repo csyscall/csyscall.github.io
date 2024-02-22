@@ -2,12 +2,14 @@
 <html lang="zh-CN">
 <head>
     <meta charset="utf-8">
-    <title>OpenLayers地图</title>
+    <title>伊川县2024年城区中小学校招生区域“一查通”</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">    
+    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
+    <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css" />
     <style>
         body,
         html,
@@ -39,15 +41,63 @@
             flex: 1 1 auto;
             padding: 0.5rem 0.5rem;
         }
+
+        ul li {
+            list-style: none;
+        }
+
+        .drawing-panel {
+            z-index: 999;
+            position: fixed;
+            bottom: 3.5rem;
+            margin-left: 3rem;
+            padding: 1rem 1rem;
+            border-radius: .25rem;
+            background-color: #fff;
+            box-shadow: 0 2px 6px 0 rgba(27, 142, 236, 0.5);
+        }
+
+        .btn {
+            width: 150px;
+            height: 30px;
+            float: left;
+            background-color: #fff;
+            color: rgba(27, 142, 236, 1);
+            font-size: 14px;
+            border: 1px solid rgba(27, 142, 236, 1);
+            border-radius: 5px;
+            margin: 0 5px;
+            text-align: center;
+            line-height: 30px;
+        }
+
+        .btn:hover {
+            background-color: rgba(27, 142, 236, 0.8);
+            color: #fff;
+        }
     </style>
 </head>
 
 <body>
+    <div
+        style="position: absolute;width: 100%; top:0px;left:0px; font-size: 12pt; text-align: center; padding-top: 10px; padding-bottom: 10px;z-index: 10;background-color: rgba(220, 220, 220, 0.8);">
+        选择学段和学生类别，点击居住位置查询。
+        <script>if (window.innerWidth < 620) document.write("<br>"); </script>
+        学段：<select id="xd">
+            <option value="XX">小学</option>
+            <option value="CZ">初中</option>
+        </select>
+        类别：<select id="lb">
+            <option value="CZ">城区城镇户口子女</option>
+            <option value="WG">进城务工子女</option>
+            <option value="DJ">进城定居子女</option>
+        </select>
+    </div>
     <div id="container"></div>
     <div class="input-card" style="width: auto;">
         <div class="input-item">
             <div><button class="btn" onclick="f(this)">隐藏路网</button></div>
-	        <div><button class='btn' onclick='getPosition()'>获取位置</button></div>
+	        <!-- <div><button class='btn' onclick='getPosition()'>获取位置</button></div> -->
         </div>
     </div>
     <script>
@@ -62,15 +112,15 @@
                 roadNet.setVisible(true);
             }
         }
-        var chinaZeroPoint = [108.9236111, 34.54083333];
+        var chinaZeroPoint = [112.421, 34.425];
+        
         var map = new ol.Map({
             target: 'container',
             layers: [
                 new ol.layer.Tile({
                     source: new ol.source.XYZ({
                         crossOrigin: 'Anonymous',
-                        url: 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&x={x}&y={y}&z={z}'         //谷歌地图影像
-                        //url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'   
+                        url: 'https://gac-geo.googlecnapps.cn/maps/vt?lyrs=s&hl=zh-CN&gl=CN&x={x}&y={y}&z={z}'         //谷歌地图影像
                     }),
                     visible: true,
                     zIndex: 1
@@ -78,7 +128,8 @@
                 new ol.layer.Tile({ //天地图影像注记
                     source: new ol.source.XYZ({
                         crossOrigin: 'Anonymous',
-                        url: 'http://t0.tianditu.gov.cn/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=728dcc4fd990d07f0e81b76d49fd8632'
+                        //url: 'http://t0.tianditu.gov.cn/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=728dcc4fd990d07f0e81b76d49fd8632'
+                        url: 'https://wprd02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8'
                     }),
                     visible: true,
                     zIndex: 1
@@ -87,22 +138,25 @@
                     zIndex: 10,
                     source: new ol.source.Vector({
                         projection: 'EPSG:3857',
-                        url: './zsqy3857.geojson',
+                        url: './zsqy-gcj02-3857.geojson',
                         format: new ol.format.GeoJSON()
                     }),
                     style: new ol.style.Style({
                         //边框样式
                         stroke: new ol.style.Stroke({
                             color: 'red',
-                            width: 3,
-                        })
+                            width: 1,
+                        }),
+                        fill: new ol.style.Fill({
+                            color: 'rgba(255,255,255,0.1)',
+                        }),
                     }),
                 }),
             ],
             view: new ol.View({
                 projection: "EPSG:3857",
-                center: ol.proj.fromLonLat(chinaZeroPoint),
-                zoom: 4,
+                center: [12517386.390143983, 4089273.9446524656],
+                zoom: 13.2,
                 minZoom: 0,
                 maxZoom: 20
             }),
@@ -114,89 +168,20 @@
         });
         var roadNet = map.getLayers().item(1);
 
-        let view = map.getView();
-        // 数据格式类型
-        let format = new ol.format.WKT();
-        //let feature = format.readFeature(lkxyd.RECORDS[0].空间信息, {
-        //    featureProjection: view.getProjection(),
-        //    dataProjection: view.getProjection(),
-        //});
-
-        //实例化一个矢量图层Vector作为绘制层
-        let source = new ol.source.Vector();
-        //创建一个图层
-        let customVectorLayer = new ol.layer.Vector({
-            source: source,
-            zIndex: 2,
-            //设置样式
-            style: new ol.style.Style({
-                //边框样式
-                stroke: new ol.style.Stroke({
-                    color: 'red',
-                    width: 3,
-                    //lineDash: [3, 5]
-                }),
-                //填充样式
-                fill: new ol.style.Fill({
-                    color: 'rgba(0, 0, 255, 0.3)',
-                }),
-                // 点的样式
-                image: new ol.style.Circle({
-                    // 点半径
-                    radius: 9,
-                    // 点颜色
-                    fill: new ol.style.Fill({
-                        color: 'red',
-                    })
-                })
-            }),
-        });
-
-        //view.setCenter(chinaZeroPoint);
-        //将绘制层添加到地图容器中
-        // map.addLayer(customVectorLayer);
-        // var features = [];
-        // lkx.RECORDS.forEach(element => {
-        //     var feature = format.readFeature(element.空间信息, {
-        //         featureProjection: view.getProjection(),
-        //         dataProjection: view.getProjection(),
-        //     });
-        //     feature['rwbm'] = element.任务编码;
-        //     feature.setStyle(new ol.style.Style({
-        //         //文字样式
-        //         text: new ol.style.Text({
-        //             font: '14px',
-        //             text: element.任务编码,
-        //             fill: new ol.style.Fill({
-        //                 color: 'rgba(255, 255, 255, 1)',
-        //             }),
-        //         }),
-        //         //边框样式
-        //         stroke: new ol.style.Stroke({
-        //             color: 'red',
-        //             width: 3,
-        //             //lineDash: [3, 5]
-        //         }),
-        //         //填充样式
-        //         fill: new ol.style.Fill({
-        //             color: 'rgba(0, 0, 255, 0.3)',
-        //         }),
-        //     }));
-        //     features.push(feature);
-        // });
-        //customVectorLayer.getSource().addFeatures(features);
-        
-        // view.setCenter([114.9999, 34.8717]);
-        // view.setZoom(12);
-        map.on('singleclick', (e) => {
-            console.log(e.coordinate,ol.proj.toLonLat(e.coordinate));
-            alert("当前位置："+ol.proj.toLonLat(e.coordinate));
-            // urlh='http://api.map.baidu.com/marker?location=';
-            // url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
-            // if(browser.versions.ios) urlh='baidumap://map/marker?location=';
-            // if(browser.versions.android) urlh='bdapp://map/marker?location=';
-            //console.log(urlh+url);
-            //window.location.href=urlh+url;
+        map.on('click',(e)=>{
+            map.forEachFeatureAtPixel(e.pixel,
+            (item)=>{
+                //console.log(item);
+                var id=item.get("OBJECTID");
+                var xd = document.getElementById("xd").value;
+                var lb = document.getElementById("lb").value;
+                var jdxx = item.get(xd + lb);
+                console.log(id, jdxx);
+                layer.open({
+                    title: "查询结果",
+                    content: "<div>根据你的信息查询到就读学校为：<B>" + jdxx + "</B>，<br />以上结果仅供参考。"
+                });
+            });
         });
 
 //判断访问终端
@@ -236,8 +221,8 @@ var browser={
                         var longitude = position.coords.longitude;//经度
                         console.log("Latitude : " + latitude + " Longitude: " + longitude);
                         // console.log(position);
-                        map.getView().setCenter([longitude, latitude]);
-                        map.getView().setZoom(16);
+                        //map.getView().setCenter([longitude, latitude]);
+                        //map.getView().setZoom(16);
                     },
                     function (error) {
                         switch (error.code) {
@@ -385,22 +370,6 @@ var browser={
 	    console.log(bdp);
             return bdp[1]+","+bdp[0];
         }
-
-        // // 经纬度转瓦片编号
-        // function lon2tile(lon,zoom) {
-        //     return (Math.floor((lon+180)/360*Math.pow(2,zoom)));
-        // }
-        //  function lat2tile(lat,zoom)  {
-        //     return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom)));
-        // }
-        // // 瓦片编号转经纬度
-        // function tile2long(x,z) {
-        //     return (x/Math.pow(2,z)*360-180);
-        //  }
-        //  function tile2lat(y,z) {
-        //     var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-        //     return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
-        //  }
     </script>
 </body>
 
