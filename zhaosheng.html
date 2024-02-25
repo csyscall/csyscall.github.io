@@ -135,6 +135,21 @@
                     zIndex: 1
                 }),
                 new ol.layer.Vector({
+                    zIndex: 5,
+                    source: new ol.source.Vector({
+                        projection: 'EPSG:3857',
+                        url: './城区边界-3857.geojson',
+                        format: new ol.format.GeoJSON()
+                    }),
+                    style: new ol.style.Style({
+                        //边框样式
+                        stroke: new ol.style.Stroke({
+                            color: 'red',
+                            width: 2,
+                        }),
+                    }),
+                }),
+                new ol.layer.Vector({
                     zIndex: 10,
                     source: new ol.source.Vector({
                         projection: 'EPSG:3857',
@@ -144,7 +159,7 @@
                     style: new ol.style.Style({
                         //边框样式
                         stroke: new ol.style.Stroke({
-                            color: 'red',
+                            color: 'rgba(255,0,0,0.1)',
                             width: 1,
                         }),
                         fill: new ol.style.Fill({
