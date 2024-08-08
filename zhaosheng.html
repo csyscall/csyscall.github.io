@@ -6,10 +6,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.5/ol.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ol3/4.6.5/ol.css">    
-    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
-    <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css" />
     <style>
         body,
         html,
@@ -17,29 +13,8 @@
             overflow: hidden;
             width: 100%;
             height: 100%;
+            /*margin-top: 60px;*/
             font-family: "微软雅黑";
-            margin: 0;
-            padding: 0;
-        }
-
-        .input-card {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            word-wrap: break-word;
-            background-color: #fff;
-            background-clip: border-box;
-            border-radius: .25rem;
-            width: 22rem;
-            border-width: 0;
-            border-radius: 0.4rem;
-            box-shadow: 0 2px 6px 0 rgba(114, 124, 245, .5);
-            position: fixed;
-            bottom: 1rem;
-            right: 1rem;
-            -ms-flex: 1 1 auto;
-            flex: 1 1 auto;
-            padding: 0.5rem 0.5rem;
         }
 
         ul li {
@@ -76,11 +51,13 @@
             color: #fff;
         }
     </style>
+    <script src="https://api.map.baidu.com/api?type=webgl&v=1.0&ak=9wV4bnvELdV7vqWb1z3EGzfDgNLW2gVP"></script>
+    <script src="https://www.layuicdn.com/layui-v2.6.8/layui.js"></script>
+    <link rel="stylesheet" href="https://www.layuicdn.com/layui-v2.6.8/css/layui.css" />
 </head>
-
 <body>
     <div
-        style="/*position: absolute;*/width: 100%; top:0px;left:0px; font-size: 12pt; text-align: center; padding-top: 10px; padding-bottom: 10px;z-index: 10;background-color: rgba(220, 220, 220, 0.8);">
+        style="position: absolute;width: 100%; top:0px;left:0px; font-size: 12pt; text-align: center; padding-top: 10px; padding-bottom: 10px;z-index: 10;background-color: rgba(220, 220, 220, 0.8);">
         选择学段和学生类别，点击居住位置查询。
         <script>if (window.innerWidth < 620) document.write("<br>"); </script>
         学段：<select id="xd">
@@ -94,298 +71,39 @@
         </select>
     </div>
     <div id="container"></div>
-    <div class="input-card" style="width: auto;">
-        <div class="input-item">
-            <div><button class="btn" onclick="f(this)">隐藏路网</button></div>
-	        <!-- <div><button class='btn' onclick='getPosition()'>获取位置</button></div> -->
-        </div>
-    </div>
-    <script>
-        function f(obj) {
-            console.log(obj);
-            if (obj.innerText == '隐藏路网') {
-                obj.innerText = '显示路网';
-                roadNet.setVisible(false);
-            }
-            else if(obj.innerText == '显示路网') {
-                obj.innerText = '隐藏路网';
-                roadNet.setVisible(true);
-            }
-        }
-        var chinaZeroPoint = [112.421, 34.425];
-        
-        var map = new ol.Map({
-            target: 'container',
-            layers: [
-                new ol.layer.Tile({
-                    source: new ol.source.XYZ({
-                        crossOrigin: 'Anonymous',
-                        url: 'https://google.tigermed.net/maps/vt?lyrs=s&hl=zh-CN&gl=CN&x={x}&y={y}&z={z}'         //谷歌地图影像
-                    }),
-                    visible: true,
-                    zIndex: 1
-                }),
-                new ol.layer.Tile({ //天地图影像注记
-                    source: new ol.source.XYZ({
-                        crossOrigin: 'Anonymous',
-                        //url: 'http://t0.tianditu.gov.cn/cia_w/wmts?service=wmts&request=GetTile&version=1.0.0&LAYER=cia&tileMatrixSet=w&TileMatrix={z}&TileRow={y}&TileCol={x}&style=default&format=tiles&tk=728dcc4fd990d07f0e81b76d49fd8632'
-                        url: 'https://wprd02.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scl=1&style=8'
-                    }),
-                    visible: true,
-                    zIndex: 1
-                }),
-                new ol.layer.Vector({
-                    zIndex: 5,
-                    source: new ol.source.Vector({
-                        projection: 'EPSG:3857',
-                        url: './城区边界-3857.geojson',
-                        format: new ol.format.GeoJSON()
-                    }),
-                    style: new ol.style.Style({
-                        //边框样式
-                        stroke: new ol.style.Stroke({
-                            color: 'red',
-                            width: 2,
-                        }),
-                    }),
-                }),
-                new ol.layer.Vector({
-                    zIndex: 10,
-                    source: new ol.source.Vector({
-                        projection: 'EPSG:3857',
-                        url: './zsqy-gcj02-3857.geojson',
-                        format: new ol.format.GeoJSON()
-                    }),
-                    style: new ol.style.Style({
-                        //边框样式
-                        stroke: new ol.style.Stroke({
-                            color: 'rgba(255,0,0,0.1)',
-                            width: 1,
-                        }),
-                        fill: new ol.style.Fill({
-                            color: 'rgba(255,255,255,0.1)',
-                        }),
-                    }),
-                }),
-            ],
-            view: new ol.View({
-                projection: "EPSG:3857",
-                center: [12517386.390143983, 4089273.9446524656],
-                zoom: 13.2,
-                minZoom: 0,
-                maxZoom: 20
-            }),
-            controls: ol.control.defaults().extend([
-                // 添加全屏控件
-                new ol.control.FullScreen(),
-                new ol.control.ZoomSlider()
-            ])
-        });
-        var roadNet = map.getLayers().item(1);
-
-        map.on('click',(e)=>{
-            map.forEachFeatureAtPixel(e.pixel,
-            (item)=>{
-                //console.log(item);
-                var id=item.get("OBJECTID");
-                var xd = document.getElementById("xd").value;
-                var lb = document.getElementById("lb").value;
-                var jdxx = item.get(xd + lb);
-                console.log(id, jdxx);
-                layer.open({
-                    title: "查询结果",
-                    content: "<div>根据你的信息查询到就读学校为：<B>" + jdxx + "</B>，<br />以上结果仅供参考。"
-                });
-            });
-        });
-
-//判断访问终端
-var browser={
-    versions:function(){
-        var u = navigator.userAgent, 
-            app = navigator.appVersion;
-        return {
-            trident: u.indexOf('Trident') > -1, //IE内核
-            presto: u.indexOf('Presto') > -1, //opera内核
-            webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
-            gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1,//火狐内核
-            mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
-            ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
-            android: u.indexOf('Android') > -1 || u.indexOf('Adr') > -1, //android终端
-            iPhone: u.indexOf('iPhone') > -1 , //是否为iPhone或者QQHD浏览器
-            iPad: u.indexOf('iPad') > -1, //是否iPad
-            webApp: u.indexOf('Safari') == -1, //是否web应该程序，没有头部与底部
-            weixin: u.indexOf('MicroMessenger') > -1, //是否微信 （2015-01-22新增）
-            qq: u.match(/\sQQ/i) == " qq" //是否QQ
-        };
-    }(),
-    language:(navigator.browserLanguage || navigator.language).toLowerCase()
-}
-
-
-        function getPosition() {
-            if (navigator.geolocation) {
-                //navigator.geolocation.getCurrentPosition这个方法里面有三个参数
-                //这个会在界面拉出一个消息框，让用户确认是否允许获取位置,不过pc端我试了都是err，
-                //参1，成功后执行的函数
-                //参2，失败时执行的函数
-                //参3，选项配置，下面是在3000毫秒内结束请求
-                navigator.geolocation.getCurrentPosition(
-                    function (position) {
-                        var latitude = position.coords.latitude;//纬度
-                        var longitude = position.coords.longitude;//经度
-                        console.log("Latitude : " + latitude + " Longitude: " + longitude);
-                        // console.log(position);
-                        //map.getView().setCenter([longitude, latitude]);
-                        //map.getView().setZoom(16);
-                    },
-                    function (error) {
-                        switch (error.code) {
-                            case 1:
-                                console.log('位置服务被拒绝');
-                                break;
-                            case 2:
-                                console.log('暂时获取不到位置信息');
-                                break;
-                            case 3:
-                                console.log('获取信息超时');
-                                break;
-                            case 4:
-                                console.log('未知错误');
-                                break;
-                        }
-                    },
-                    { timeout: 3000 }
-                )
-            }
-        }
-        //getPosition();
-
-        //定义一些常量
-        var x_PI = 3.14159265358979324 * 3000.0 / 180.0;
-        var PI = 3.1415926535897932384626;
-        var a = 6378245.0;
-        var ee = 0.00669342162296594323;
-        /**
-          * 百度坐标系 (BD-09) 与 火星坐标系 (GCJ-02)的转换
-          * 即 百度 转 谷歌、高德
-          * @param bd_lon
-          * @param bd_lat
-          * @returns {*[]}
-          */
-        function bd09togcj02(bd_lon, bd_lat) {
-            var x_pi = 3.14159265358979324 * 3000.0 / 180.0;
-            var x = bd_lon - 0.0065;
-            var y = bd_lat - 0.006;
-            var z = Math.sqrt(x * x + y * y) - 0.00002 * Math.sin(y * x_pi);
-            var theta = Math.atan2(y, x) - 0.000003 * Math.cos(x * x_pi);
-            var gg_lng = z * Math.cos(theta);
-            var gg_lat = z * Math.sin(theta);
-            return [gg_lng, gg_lat]
-        }
-        /**
-        * 火星坐标系 (GCJ-02) 与百度坐标系 (BD-09) 的转换
-        * 即谷歌、高德 转 百度
-        * @param lng
-        * @param lat
-        * @returns {*[]}
-        */
-        function gcj02tobd09(lng, lat) {
-            var z = Math.sqrt(lng * lng + lat * lat) + 0.00002 * Math.sin(lat * x_PI);
-            var theta = Math.atan2(lat, lng) + 0.000003 * Math.cos(lng * x_PI);
-            var bd_lng = z * Math.cos(theta) + 0.0065;
-            var bd_lat = z * Math.sin(theta) + 0.006;
-            return [bd_lng, bd_lat]
-        }
-        /**
-        * WGS84转GCj02
-        * @param lng
-        * @param lat
-        * @returns {*[]}
-        */
-        function wgs84togcj02(lng, lat) {
-            if (out_of_china(lng, lat)) {
-                return [lng, lat]
-            }
-            else {
-                var dlat = transformlat(lng - 105.0, lat - 35.0);
-                var dlng = transformlng(lng - 105.0, lat - 35.0);
-                var radlat = lat / 180.0 * PI;
-                var magic = Math.sin(radlat);
-                magic = 1 - ee * magic * magic;
-                var sqrtmagic = Math.sqrt(magic);
-                dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * PI);
-                dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * PI);
-                var mglat = lat + dlat;
-                var mglng = lng + dlng;
-                return [mglng, mglat]
-            }
-        }
-        /**
-        * GCJ02 转换为 WGS84
-        * @param lng
-        * @param lat
-        * @returns {*[]}
-        */
-        function gcj02towgs84(lng, lat) {
-            if (out_of_china(lng, lat)) {
-                return [lng, lat]
-            }
-            else {
-                var dlat = transformlat(lng - 105.0, lat - 35.0);
-                var dlng = transformlng(lng - 105.0, lat - 35.0);
-                var radlat = lat / 180.0 * PI;
-                var magic = Math.sin(radlat);
-                magic = 1 - ee * magic * magic;
-                var sqrtmagic = Math.sqrt(magic);
-                dlat = (dlat * 180.0) / ((a * (1 - ee)) / (magic * sqrtmagic) * PI);
-                dlng = (dlng * 180.0) / (a / sqrtmagic * Math.cos(radlat) * PI);
-                mglat = lat + dlat;
-                mglng = lng + dlng;
-                return [lng * 2 - mglng, lat * 2 - mglat]
-            }
-        }
-        function transformlat(lng, lat) {
-            var ret = -100.0 + 2.0 * lng + 3.0 * lat + 0.2 * lat * lat + 0.1 * lng * lat + 0.2 * Math.sqrt(Math.abs(lng));
-            ret += (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0;
-            ret += (20.0 * Math.sin(lat * PI) + 40.0 * Math.sin(lat / 3.0 * PI)) * 2.0 / 3.0;
-            ret += (160.0 * Math.sin(lat / 12.0 * PI) + 320 * Math.sin(lat * PI / 30.0)) * 2.0 / 3.0;
-            return ret
-        }
-        function transformlng(lng, lat) {
-            var ret = 300.0 + lng + 2.0 * lat + 0.1 * lng * lng + 0.1 * lng * lat + 0.1 * Math.sqrt(Math.abs(lng));
-            ret += (20.0 * Math.sin(6.0 * lng * PI) + 20.0 * Math.sin(2.0 * lng * PI)) * 2.0 / 3.0;
-            ret += (20.0 * Math.sin(lng * PI) + 40.0 * Math.sin(lng / 3.0 * PI)) * 2.0 / 3.0;
-            ret += (150.0 * Math.sin(lng / 12.0 * PI) + 300.0 * Math.sin(lng / 30.0 * PI)) * 2.0 / 3.0;
-            return ret
-        }
-        /**
-        * 判断是否在国内，不在国内则不做偏移
-        * @param lng
-        * @param lat
-        * @returns {boolean}
-        */
-        function out_of_china(lng, lat) {
-            return (lng < 72.004 || lng > 137.8347) || ((lat < 0.8293 || lat > 55.8271) || false);
-        }
-         /**
-         * WGS84 转换为 BD-09
-         * @param lng
-         * @param lat
-         * @returns {*[]}
-         *
-         */
-        function wgs84tobd09(lng, lat){
-            console.log(lng,lat);
-	    //第一次转换
-            gcj02p = wgs84togcj02(lng,lat);
-	    console.log(gcj02p);
-            //第二次转换
-            bdp = gcj02tobd09(gcj02p[0],gcj02p[1]);
-	    console.log(bdp);
-            return bdp[1]+","+bdp[0];
-        }
-    </script>
 </body>
-
 </html>
+<script>
+    var map = new BMapGL.Map('container');
+    var point = new BMapGL.Point(112.421 + 0.0126, 34.425 + .0006);
+    map.centerAndZoom(point, 15);
+    map.enableScrollWheelZoom(true);
+    var features;
+    fetch("zsqy.geojson")
+        .then(response => response.json())
+        .then(data => {
+            features = data.features;
+            for (j = 0; j < features.length; j++) {
+                var ypoints = features[j].geometry.coordinates[0][0];
+                var points = [];
+                for (i = 0; i < ypoints.length; i++)
+                    points.push(new BMapGL.Point(ypoints[i][0] + 0.0064, ypoints[i][1] + 0.0063));
+                var polygon = new BMapGL.Polygon(points, {
+                    strokeColor: "blue", strokeWeight: 1, strokeOpacity: 0.5
+                });
+                polygon.ID = features[j].properties.OBJECTID;
+                polygon.addEventListener("click", (e) => {
+                    id = e.target.ID;
+                    xd = document.getElementById("xd").value;
+                    lb = document.getElementById("lb").value;
+                    jdxx = features[e.target.ID].properties[xd + lb];
+                    console.log(id, jdxx);
+                    layer.open({
+                        title: "查询结果",
+                        content: "<div>根据你的信息查询到就读学校为：<B>" + jdxx + "</B>，<br />以上结果仅供参考。"
+                    });
+                });
+                map.addOverlay(polygon);
+            }
+        });
+</script>
