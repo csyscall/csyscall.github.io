@@ -180,11 +180,18 @@
 
         $("#dingwei").click(()=>{
             geolocation.setTracking(!geolocation.getTracking());
-            if(geolocation.getTracking()){
-                map.getView().setCenter(geolocation.getPosition());
-                map.getView().setZoom(15);
-                map.addLayer(posLayer);
-                console.log(geolocation.getPosition());
+            if(geolocation.getTracking()){                
+                var timer=setInterval(()=>{
+                    if(geolocation.getPosition()){
+                        map.getView().setCenter(geolocation.getPosition());
+                        var extent = geolocation.getAccuracyGeometry().getExtent();
+                        var zoom=(extent[2]-extent[0])/1000;
+                        map.getView().setZoom(zoom);
+                        map.addLayer(posLayer);
+                        console.log(geolocation.getPosition());
+                        clearInterval(timer);
+                    }
+                },1000);
             }
             else map.removeLayer(posLayer);
         });
