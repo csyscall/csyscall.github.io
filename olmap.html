@@ -127,7 +127,7 @@
                 center: ol.proj.fromLonLat(chinaZeroPoint),
                 zoom: 4,
                 minZoom: 0,
-                maxZoom: 20
+                maxZoom: 22
             }),
             controls: ol.control.defaults.defaults({zoom:false}).extend([
                 // 添加全屏控件
@@ -185,7 +185,7 @@
                     if(geolocation.getPosition()){
                         map.getView().setCenter(geolocation.getPosition());
                         var extent = geolocation.getAccuracyGeometry().getExtent();
-                        var zoom=(extent[2]-extent[0])/1000;
+                        var zoom=22 - Math.log2(extent[2]-extent[0]);
                         map.getView().setZoom(zoom);
                         map.addLayer(posLayer);
                         console.log(geolocation.getPosition());
