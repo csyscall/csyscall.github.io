@@ -193,8 +193,6 @@
             var coordinates = geolocation.getPosition();
             if (coordinates) {
                 positionFeature.setGeometry(new ol.geom.Point(coordinates));
-                map.getView().setCenter(coordinates);
-                map.getView().setZoom(15);
             } else {
                 positionFeature.setGeometry(null);
             }
