@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <title>OpenLayers地图</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.7.1.min.js"></script>
+    <script src="ChinaProvider.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">
+    <style>
+        body,
+        html,
+        #container {
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            font-family: "微软雅黑";
+            margin: 0;
+            padding: 0;
+        }
+
+        .input-card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border-radius: .25rem;
+            width: 22rem;
+            border-width: 0;
+            border-radius: 0.4rem;
+            box-shadow: 0 2px 6px 0 rgba(114, 124, 245, .5);
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            -ms-flex: 1 1 auto;
+            flex: 1 1 auto;
+            padding: 0.5rem 0.5rem;
+        }
+        .tubiao{
+            background-color: #fff;
+            background-clip: border-box;
+            border-radius: .25rem;
+            height:2em;
+            width: 2em;
+            margin-bottom: 0.6em;
+            padding: 0.2em;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div id="layerlist" style="position: fixed; top: -5pt; left: 5pt; margin: 0;padding: 0;border-radius: .25rem; z-index: 1000; display: none;">
+        <ul style="list-style-type: none;padding: 5pt;background-color: #fff;">
+            <li><input type="radio" name="layer" value="1" checked="true">谷歌卫星地图</li>
+            <li><input type="radio" name="layer" value="2" >天地图卫星地图</li>
+            <li><input type="radio" name="layer" value="3" >ArcGis卫星地图</li>
+            <li><input type="radio" name="layer" value="4" >星图卫星地图</li>
+            <li><input type="radio" name="layer" value="9" >吉林卫星地图</li>
+            <li><input type="radio" name="layer" value="10" >四维卫星地图</li>
+            <li><input type="radio" name="layer" value="11" >Bing卫星地图</li>
+            <li><input type="radio" name="layer" value="5" >高德地图</li>
+            <hr>
+            <li><input type="radio" name="zjlayer" value="6" >天地图注记</li>
+            <li><input type="radio" name="zjlayer" value="7" >高德注记</li>
+            <li><input type="radio" name="zjlayer" value="8" >无注记</li>
+        </ul>
+    </div>
+    <div style="position: fixed; top: 5pt; left: 5pt; margin: 0;padding: 0;">
+        <div class="tubiao" id="menu">
+            <svg class="bi bi-collection" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M14.5 13.5h-13A.5.5 0 0 1 1 13V6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5zm-13 1A1.5 1.5 0 0 1 0 13V6a1.5 1.5 0 0 1 1.5-1.5h13A1.5 1.5 0 0 1 16 6v7a1.5 1.5 0 0 1-1.5 1.5h-13zM2 3a.5.5 0 0 0 .5.5h11a.5.5 0 0 0 0-1h-11A.5.5 0 0 0 2 3zm2-2a.5.5 0 0 0 .5.5h7a.5.5 0 0 0 0-1h-7A.5.5 0 0 0 4 1z"/>
+              </svg>
+        </div>
+        <div class="tubiao" id="dingwei">
+            <svg class="bi bi-cursor" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L5.57 10.694.803 8.652a.5.5 0 0 1-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103zM2.25 8.184l3.897 1.67a.5.5 0 0 1 .262.263l1.67 3.897L12.743 3.52 2.25 8.184z"/>
+              </svg>
+        </div>
+        <div class="tubiao" id="shangchuan">
+            <svg class="bi bi-upload" width="2em" height="2em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path fill-rule="evenodd" d="M.5 8a.5.5 0 0 1 .5.5V12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8.5a.5.5 0 0 1 1 0V12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V8.5A.5.5 0 0 1 .5 8zM5 4.854a.5.5 0 0 0 .707 0L8 2.56l2.293 2.293A.5.5 0 1 0 11 4.146L8.354 1.5a.5.5 0 0 0-.708 0L5 4.146a.5.5 0 0 0 0 .708z"/>
+                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v8a.5.5 0 0 1-1 0v-8A.5.5 0 0 1 8 2z"/>
+              </svg>
+        </div>
+    </div>
+
+    <script>
+        //添加国测局坐标系
+        const gcj02Extent = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244];
+        const gcjMecator = new ol.proj.Projection({
+            code: "GCJ-02",
+            extent: gcj02Extent,
+            units: "m"
+        });
+        ol.proj.addProjection(gcjMecator);
+
+        var chinaZeroPoint = [108.9236111, 34.54083333];
+        var map = new ol.Map({
+            target: 'container',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.XYZ({
+                        crossOrigin: 'Anonymous',
+                        url: 'https://bgn1.gpstool.com/maps/vt?lyrs=s&x={x}&y={y}&z={z}'         //谷歌地图影像
+                        //url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'   
+                    }),
+                    visible: true,
+                    zIndex: 1
+                }),
+                new ol.layer.Tile({ //天地图影像注记
+                    source: new ol.source.XYZ({
+                        crossOrigin: 'Anonymous',
+                        url: ''
+                    }),
+                    visible: true,
+                    zIndex: 2
+                }),
+            ],
+            view: new ol.View({
+                projection: "EPSG:3857",
+                center: ol.proj.fromLonLat(chinaZeroPoint),
+                zoom: 4,
+                minZoom: 0,
+                maxZoom: 20
+            }),
+            controls: ol.control.defaults.defaults({zoom:false}).extend([
+                // 添加全屏控件
+                //new ol.control.FullScreen(),
+                //new ol.control.ZoomSlider()
+            ])
+        });
+ 
+        //map.on('singleclick', (e) => {
+        //    console.log(e.coordinate,ol.proj.toLonLat(e.coordinate));
+            //alert("当前位置："+ol.proj.toLonLat(e.coordinate));
+            // urlh='http://api.map.baidu.com/marker?location=';
+            // url=wgs84tobd09(e.coordinate[0] , e.coordinate[1]) + '&title=目的地&content=需要核实调查的地点&coord_type=bd09ll&output=html&src=html';
+            // if(browser.versions.ios) urlh='baidumap://map/marker?location=';
+            // if(browser.versions.android) urlh='bdapp://map/marker?location=';
+            //console.log(urlh+url);
+            //window.location.href=urlh+url;
+        //});
+
+        var geolocation = new ol.Geolocation({
+            // take the projection to use from the map's view
+            trackingOptions: {
+                enableHighAccuracy: true,
+                maximumAge: 5000
+            },
+            tracking:false,
+            projection: map.getView().getProjection()
+        });
+
+        var positionFeature = new ol.Feature();
+        positionFeature.setStyle(new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 6,
+                fill: new ol.style.Fill({
+                    color: '#3399CC'
+                }),
+                stroke: new ol.style.Stroke({
+                    color: '#fff',
+                    width: 2
+                })
+            })
+        }));
+        var accuracyFeature = new ol.Feature();
+        var posLayer = new ol.layer.Vector({
+            source: new ol.source.Vector({
+                features: [accuracyFeature, positionFeature]
+            }),
+            zIndex:100,
+        });
+
+        $("#dingwei").click(()=>{
+            geolocation.setTracking(!geolocation.getTracking());
+            if(geolocation.getTracking()){
+                map.getView().setCenter(geolocation.getPosition());
+                map.getView().setZoom(15);
+                map.addLayer(posLayer);
+                console.log(geolocation.getPosition());
+            }
+            else map.removeLayer(posLayer);
+        });
+        // listen to changes in position
+        geolocation.on('change:position', function() {
+            var coordinates = geolocation.getPosition();
+            if (coordinates) {
+                positionFeature.setGeometry(new ol.geom.Point(coordinates));
+                map.getView().setCenter(coordinates);
+                map.getView().setZoom(15);
+            } else {
+                positionFeature.setGeometry(null);
+            }
+        });
+
+        geolocation.on('change:accuracyGeometry', function() {
+            var accuracyGeometry = geolocation.getAccuracyGeometry();
+            if (accuracyGeometry) {
+                accuracyFeature.setGeometry(accuracyGeometry);
+            } else {
+                accuracyFeature.setGeometry(null);
+            }
+        });
+
+
+
+        function styleFunction(feature){
+            var rcolor='#'+Math.floor(Math.random()*16777215).toString(16);
+            return new ol.style.Stroke({
+                    stroke: new ol.style.Stroke({
+                    color: rcolor,
+                    width: 2
+                }),
+                fill: new ol.style.Fill({
+                    color: rcolor
+                })
+            });
+        }
+
+        function addVectorLayer(geojsonData,type) {
+            var myFeatures;  //要载入的要素集合
+            if(type==="geojson"){
+                myFeatures = new ol.format.GeoJSON().readFeatures(geojsonData, {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: 'EPSG:3857'
+                });
+            }
+            else if(type==="kml") {
+                myFeatures = new ol.format.KML().readFeatures(geojsonData, {
+                    dataProjection: 'EPSG:4326',
+                    featureProjection: 'EPSG:3857',
+                    extractStyles: false,
+                });
+            }
+            var layerExtent = ol.extent.createEmpty(); // 创建一个空的边界
+            myFeatures.forEach(function(feature) {
+                ol.extent.extend(layerExtent, feature.getGeometry().getExtent()); // 扩展边界以包含每个要素的边界
+            });
+            var geojsonLayer = new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    features: myFeatures,
+                }),
+                style: new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: '#ffcc33',
+                        width: 2
+                    }),
+                    fill: new ol.style.Fill({
+                        color: 'rgba(255, 255, 0, 0.5)'
+                    })
+                }),
+                zIndex:10,
+            });
+            map.addLayer(geojsonLayer);
+            map.getView().fit(layerExtent, {
+                duration: 500 // 动画持续时间，单位为毫秒
+            });
+        }
+
+        $("#shangchuan").click(async function(){
+            console.log('上传按钮点击！');
+            const [fileHandle] = await window?.showOpenFilePicker({
+                types: [
+                {
+                    description: "矢量图层",
+                    accept: {"geo/*": ['.geojson', '.kml']}
+                }
+                ]
+            });
+            // 获取文件File对象
+            const file = await fileHandle?.getFile();
+            console.group("获取到的文件");
+            /*console.log(fileHandle);
+            console.log(file);*/
+            const text = await file.text();
+            var fileType=file.name.split(".")[1].toLowerCase();
+            addVectorLayer(text,fileType);
+            console.log(text);
+            console.groupEnd();
+
+        });
+
+        $("input[type='radio']").change(function() {
+            var selectedLayer = $("input[type='radio'][name='layer']:checked").val();
+            var selectedAnnotation = $("input[type='radio'][name='zjlayer']:checked").val();
+            let newsource='';
+            // Perform actions based on selected layer
+            switch(selectedLayer) {
+                case '1':
+                    newsource=ChinaProvider.Google.Satellite.Map;                      
+                    newsource="http:"+newsource;                  
+                    console.log("Action for 谷歌卫星地图");
+                    break;
+                case '2':
+                    newsource=ChinaProvider.TianDiTu.Satellite.Map;
+                    newsource=newsource.replace("{s}",ChinaProvider.TianDiTu.Subdomains[0]);          
+                    newsource=newsource.replace("{key}",ChinaProvider.TianDiTu.key);                        
+                    newsource="http:"+newsource;        
+                    console.log("Action for 天地图卫星地图");
+                    break;
+                case '3':
+                    newsource=ChinaProvider.ArcGIS.Satellite.Map;
+                    console.log("Action for ArcGis卫星地图");
+                    break;
+                case '4':
+                    newsource=ChinaProvider.Geovisearth.Satellite.Map;                    
+                    newsource=newsource.replace("{s}",ChinaProvider.Geovisearth.Subdomains[0]);     
+                    console.log("Action for 星图卫星地图");
+                    break;
+                case '5':
+                    newsource=ChinaProvider.GaoDe.Normal.Map;                    
+                    newsource=newsource.replace("{s}",ChinaProvider.GaoDe.Subdomains[0]);                     
+                    newsource="http:"+newsource;
+                    console.log("Action for 高德地图");
+                    break;
+                case '9':
+                    newsource=ChinaProvider.jilin.Satellite.Map;                    
+                    console.log("Action for 吉林卫星地图");
+                    break;
+                case '10':
+                    newsource=ChinaProvider.MineData.Satellite.Map;                    
+                    console.log("Action for 四维卫星地图");
+                    break;
+            }
+            map.getLayers().item(0).setSource(
+                new ol.source.XYZ({
+                    url: newsource
+                })
+            );
+            console.log(newsource);
+
+            if(selectedLayer==='11'){ //bingmap
+                map.getLayers().item(0).setSource(
+                    new ol.source.BingMaps({
+                        key: 'ApAO5ZCeRKtoMWO19d6N92rSR6_9ieItpQsvp0eB7Cw8v5N_q0QrV6e4_nQpt5ay',//'Ap9VqFbJYRNkatdxt3KyzfJxXN_9GlfABRyX3k_JsQTkMQLfK_-AzDyJHI5nojyP',
+                        imagerySet: 'Aerial', 
+                        maxZoom: 19
+                    })
+                );
+                console.log("Action for Bing卫星地图");
+            }
+
+            let zjSource='';
+            // Perform actions based on selected annotation layer
+            switch(selectedAnnotation) {
+                case '6':
+                    zjSource=ChinaProvider.TianDiTu.Satellite.Annotion;
+                    zjSource=zjSource.replace("{s}",ChinaProvider.TianDiTu.Subdomains[0]);          
+                    zjSource=zjSource.replace("{key}",ChinaProvider.TianDiTu.key);                        
+                    zjSource="http:"+zjSource;        
+                    console.log("Action for 天地图注记");
+                    break;
+                case '7':
+                    zjSource=ChinaProvider.GaoDe.Satellite.Annotion;
+                    zjSource=zjSource.replace("{s}",ChinaProvider.GaoDe.Subdomains[0]);                          
+                    zjSource="http:"+zjSource;      
+                    console.log("Action for 高德注记");
+                    break;
+                case '8':
+                    zjSource=null;
+                    break;
+            }
+            console.log(zjSource);
+            map.getLayers().item(1).setSource(
+                new ol.source.XYZ({url:zjSource})
+            );
+        });
+        
+        $("#menu").mousemove(function(e){
+            $("#layerlist").show();
+        });
+        $("#layerlist").mouseleave(function(e){
+            $("#layerlist").hide();
+        });
+
+        //判断访问终端
+        var browser={
+            versions:function(){
+                var u = navigator.userAgent, 
+                    app = navigator.appVersion;
+                return {
+                    trident: u.indexOf('Trident') > -1, //IE内核
+                    presto: u.indexOf('Presto') > -1, //opera内核
+                    webKit: u.indexOf('AppleWebKit') > -1, //苹果、谷歌内核
+                    gecko: u.indexOf('Gecko') > -1 && u.indexOf('KHTML') == -1,//火狐内核
+                    mobile: !!u.match(/AppleWebKit.*Mobile.*/), //是否为移动终端
+                    ios: !!u.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/), //ios终端
+                    android: u.indexOf('Android') > -1 || u.indexOf('Adr') > -1, //android终端
+                    iPhone: u.indexOf('iPhone') > -1 , //是否为iPhone或者QQHD浏览器
+                    iPad: u.indexOf('iPad') > -1, //是否iPad
+                    webApp: u.indexOf('Safari') == -1, //是否web应该程序，没有头部与底部
+                    weixin: u.indexOf('MicroMessenger') > -1, //是否微信 （2015-01-22新增）
+                    qq: u.match(/\sQQ/i) == " qq" //是否QQ
+                };
+            }(),
+            language:(navigator.browserLanguage || navigator.language).toLowerCase()
+        }
+    </script>
+</body>
+
+</html>
