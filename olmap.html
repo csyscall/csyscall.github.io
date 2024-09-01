@@ -89,7 +89,7 @@
               </svg>
         </div>
     </div>
-
+    <input type="file" id="infile" accept='.geojson, .kml' multiple="false" style="display: none;"  />
     <script>
         //添加国测局坐标系
         const gcj02Extent = [-20037508.342789244, -20037508.342789244, 20037508.342789244, 20037508.342789244];
@@ -127,7 +127,7 @@
                 center: ol.proj.fromLonLat(chinaZeroPoint),
                 zoom: 4,
                 minZoom: 0,
-                maxZoom: 22
+                //maxZoom: 20
             }),
             controls: ol.control.defaults.defaults({zoom:false}).extend([
                 // 添加全屏控件
@@ -136,7 +136,8 @@
             ])
         });
  
-        //map.on('singleclick', (e) => {
+        map.on('singleclick', (e) => {
+            $("#layerlist").hide();
         //    console.log(e.coordinate,ol.proj.toLonLat(e.coordinate));
             //alert("当前位置："+ol.proj.toLonLat(e.coordinate));
             // urlh='http://api.map.baidu.com/marker?location=';
@@ -145,7 +146,7 @@
             // if(browser.versions.android) urlh='bdapp://map/marker?location=';
             //console.log(urlh+url);
             //window.location.href=urlh+url;
-        //});
+        });
 
         var geolocation = new ol.Geolocation({
             // take the projection to use from the map's view
@@ -269,7 +270,9 @@
             });
         }
 
-        $("#shangchuan").click(async function(){
+        $("#shangchuan").click(/*async*/ function(){
+            $("#infile").click();
+            /*
             console.log('上传按钮点击！');
             const [fileHandle] = await window?.showOpenFilePicker({
                 types: [
@@ -282,14 +285,23 @@
             // 获取文件File对象
             const file = await fileHandle?.getFile();
             console.group("获取到的文件");
-            /*console.log(fileHandle);
-            console.log(file);*/
+            console.log(fileHandle);
+            console.log(file);
             const text = await file.text();
             var fileType=file.name.split(".")[1].toLowerCase();
             addVectorLayer(text,fileType);
             console.log(text);
             console.groupEnd();
-
+            */
+        });
+        $("#infile").change((event)=>{
+            var file = event.target.files[0]; 
+            var fileType=file.name.split(".")[1].toLowerCase();
+            var fr=new FileReader();
+            fr.onload=function(){
+                addVectorLayer(this.result,fileType);
+            }
+            fr.readAsText(file);
         });
 
         $("input[type='radio']").change(function() {
