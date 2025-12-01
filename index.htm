@@ -19,6 +19,9 @@
     #container {
       height: 100%
     }
+    #popinfo {
+      font-size: 16px;
+    }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -27,17 +30,29 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
 </head>
 <style type="text/css"></style>
-
 <body>
+    <div
+        style="position: absolute;width: 100%; top:0px;left:0px; font-size: 12pt; text-align: center; padding-top: 10px; padding-bottom: 10px;z-index: 10000;background-color: rgba(220, 220, 220, 0.8);">
+        选择学段和学生类别，点击居住位置查询。
+        <script>if (window.innerWidth < 620) document.write("<br>"); </script>
+        学段：<select id="xd">
+            <option value="XX">小学</option>
+            <option value="CZ">初中</option>
+        </select>
+        类别：<select id="lb">
+            <option value="CZ">城区城镇户口子女</option>
+            <option value="WG">进城务工子女</option>
+            <option value="DJ">进城定居子女</option>
+        </select>
+    </div>
   <div id="container"></div>
 </body>
-<script src="https://webapi.amap.com/maps?v=2.0&key=8ecb203a5a322747646dd94fd58c6306"></script>
 <script>
   var map = L.map('container', {
-    center: {lat: 34.54083333, lng: 108.9236111},
-    zoom: 4,
+    center: {lat: 34.425, lng: 112.421},
+    zoom: 14,
   })
-  L.tileLayer('https://maps.one-heritage.com/maps/vt?lyrs=s&hl=zh-CN&gl=CN&x={x}&y={y}&z={z}', {
+  L.tileLayer('https://bgn1.gpstool.com/maps/vt?lyrs=s&gl=cn&x={x}&y={y}&z={z}', {
     maxZoom: 20,
     attribution: '© GoogleMap'
   }).addTo(map);
@@ -45,16 +60,23 @@
     maxZoom: 20,
   }).addTo(map);
 
-    // $.get('/public/ycx.geojson', function (data, status) {
-    //     //console.log(data);
-    //     L.geoJSON(data, {
-    //         style: {
-    //             "color": "#ff0000",
-    //             "weight": 5,
-    //             "opacity": 0.99
-    //         }
-    //     }).addTo(map);
-    // });
-
+  $.get('/zsqy.geojson', function (data, status) {
+      features = data.features;
+      L.geoJSON(data, {
+          style: {
+              "color": "#0000ff",
+              "weight": 2,
+              "opacity": 0.8,
+              "fillColor": "#ffffff",
+              "fillOpacity": 0.2
+          },
+      }).bindPopup(function (layer) {
+          id = layer.feature.properties.OBJECTID;
+          var xd = document.getElementById("xd").value;
+          var lb = document.getElementById("lb").value;
+          var jdxx = layer.feature.properties[xd + lb];
+          return "<h2>查询结果</h2>" + "<div id='popinfo'>根据你的信息查询到就读学校为：<br /><B>" + jdxx + "</B><br />以上结果仅供参考。";
+      }).addTo(map);
+  });
 </script>
 </html>
