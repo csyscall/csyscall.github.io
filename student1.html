@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>伊川县中小学生资助申报系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f9ff;
+            color: #333;
+            line-height: 1.6;
+            padding: 15px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #4a6ee0;
+        }
+        
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        
+        .header p {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-title i {
+            color: #4a6ee0;
+        }
+        
+        .form-group {
+            margin-bottom: 18px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #444;
+            font-size: 0.95rem;
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #4a6ee0;
+            box-shadow: 0 0 0 2px rgba(74, 110, 224, 0.2);
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: #4a6ee0;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a5bd0;
+        }
+        
+        .btn-secondary {
+            background-color: #f0f3ff;
+            color: #4a6ee0;
+            border: 1px solid #c8d2ff;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e4e9ff;
+        }
+        
+        .info-section {
+            display: none;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 10px;
+        }
+        
+        .info-item {
+            background-color: #f8faff;
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #4a6ee0;
+        }
+        
+        .info-label {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 4px;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        
+        .error-message {
+            background-color: #ffeaea;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            border-left: 4px solid #e74c3c;
+            display: none;
+        }
+        
+        .type-selection {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        
+        .type-item {
+            background-color: #f8faff;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .type-item:hover {
+            background-color: #eef2ff;
+        }
+        
+        .type-item.selected {
+            border-color: #4a6ee0;
+            background-color: #eef2ff;
+        }
+        
+        .type-item.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 20px;
+            height: 20px;
+            background-color: #4a6ee0;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .type-num {
+            display: inline-block;
+            width: 28px;
+            height: 28px;
+            background-color: #4a6ee0;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 28px;
+            margin-right: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .type-text {
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 25px;
+            position: relative;
+        }
+        
+        .modal-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-title {
+            font-size: 1.4rem;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #7f8c8d;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+        
+        .close-btn:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        .file-upload-container {
+            margin-bottom: 15px;
+        }
+        
+        .file-upload-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .file-upload-option {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #c8d2ff;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-height: 120px;
+        }
+        
+        .file-upload-option:hover {
+            border-color: #4a6ee0;
+            background-color: #f8faff;
+        }
+        
+        .file-upload-option i {
+            font-size: 1.8rem;
+            color: #4a6ee0;
+            margin-bottom: 10px;
+        }
+        
+        .file-upload-option p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+        
+        .file-upload-option span {
+            font-size: 0.8rem;
+            color: #a0a0a0;
+        }
+        
+        .uploaded-file {
+            display: flex;
+            align-items: center;
+            background-color: #f0f7ff;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 10px;
+            border-left: 4px solid #4a6ee0;
+        }
+        
+        .uploaded-file i {
+            color: #27ae60;
+            font-size: 1.5rem;
+            margin-right: 10px;
+        }
+        
+        .uploaded-file-info {
+            flex: 1;
+        }
+        
+        .uploaded-file-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+        
+        .uploaded-file-size {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+        }
+        
+        .remove-file {
+            background: none;
+            border: none;
+            color: #e74c3c;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 5px;
+        }
+        
+        .required::after {
+            content: " *";
+            color: #e74c3c;
+        }
+        
+        .application-info {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .benefit-list {
+            margin-top: 15px;
+        }
+        
+        .benefit-item {
+            background-color: #f0f7ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4a6ee0;
+        }
+        
+        .benefit-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .benefit-desc {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #7f8c8d;
+            font-size: 0.85rem;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* 拍照预览相关样式 */
+        .camera-preview {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+        }
+        
+        .camera-video {
+            width: 100%;
+            height: calc(100% - 120px);
+            object-fit: cover;
+        }
+        
+        .camera-controls {
+            height: 120px;
+            background-color: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .camera-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .camera-capture {
+            background-color: white;
+            color: #333;
+            font-size: 1.5rem;
+        }
+        
+        .camera-cancel {
+            background-color: #e74c3c;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .camera-flip {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        @media (max-width: 576px) {
+            .type-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .file-upload-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>伊川县中小学生资助申报系统</h1>
+            <p>请填写学生信息，查询学籍并申请相关资助</p>
+        </div>
+        
+        <!-- 查询学籍信息卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-search"></i>
+                <span>查询学籍信息</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="studentName">学生姓名</label>
+                <input type="text" id="studentName" placeholder="请输入学生姓名">
+            </div>
+            
+            <div class="form-group">
+                <label for="idNumber">身份证号</label>
+                <input type="text" id="idNumber" placeholder="请输入身份证号">
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn-secondary" id="resetBtn">
+                    <i class="fas fa-redo"></i>重置
+                </button>
+                <button type="button" class="btn-primary" id="queryBtn">
+                    <i class="fas fa-search"></i>查询学籍
+                </button>
+            </div>
+            
+            <!-- 学籍信息显示区域 -->
+            <div class="info-section" id="studentInfo">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">学校</div>
+                        <div class="info-value" id="schoolName">伊川县第一实验小学</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">学段</div>
+                        <div class="info-value" id="stage">小学</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">年级</div>
+                        <div class="info-value" id="grade">五年级</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">学籍号</div>
+                        <div class="info-value" id="studentCode">G410329201812345678</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 错误信息 -->
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i> 
+                <span>您的姓名或身份证号不准确或您的学籍不在伊川县。</span>
+            </div>
+        </div>
+        
+        <!-- 身份类型选择卡片 -->
+        <div class="card">
+            <div class="card-title">
+                <i class="fas fa-user-tag"></i>
+                <span>学生身份类型</span>
+            </div>
+            
+            <button type="button" class="btn-primary" id="queryTypeBtn">
+                <i class="fas fa-user-check"></i>查询学生身份类型
+            </button>
+            
+            <div class="type-selection" id="typeSelection">
+                <p>请选择符合您情况的身份类型（单选）：</p>
+                <div class="type-grid" id="typeGrid">
+                    <!-- 类型选项将通过JavaScript动态生成 -->
+                </div>
+                
+                <div class="button-group" style="margin-top: 25px;">
+                    <button type="button" class="btn-primary" id="applyBtn">
+                        <i class="fas fa-paper-plane"></i>申请资助
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 申请结果展示 -->
+        <div class="card application-info" id="applicationInfo">
+            <div class="card-title">
+                <i class="fas fa-file-alt"></i>
+                <span>资助申请结果</span>
+            </div>
+            
+            <div class="benefit-list" id="benefitList">
+                <!-- 资助项目将通过JavaScript动态生成 -->
+            </div>
+            
+            <p style="margin-top: 15px; color: #27ae60; font-weight: 600;">
+                <i class="fas fa-check-circle"></i> 您已成功提交资助申请！
+            </p>
+        </div>
+    </div>
+    
+    <!-- 完善信息弹窗 -->
+    <div class="modal-overlay" id="applicationModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModalBtn">&times;</button>
+            
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-user-edit"></i>
+                    <span>完善学生信息</span>
+                </div>
+            </div>
+            
+            <form id="applicationForm">
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="modalStudentName">学生姓名</label>
+                            <input type="text" id="modalStudentName" readonly>
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="modalSchoolName">学校</label>
+                            <input type="text" id="modalSchoolName" readonly>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="modalGrade" class="required">年级</label>
+                            <input type="text" id="modalGrade" placeholder="例如：五年级">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="modalClass" class="required">班级</label>
+                            <input type="text" id="modalClass" placeholder="例如：三班">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="accommodation" class="required">寄宿情况</label>
+                    <select id="accommodation" style="width: 100%; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem;">
+                        <option value="">请选择寄宿情况</option>
+                        <option value="寄宿生">寄宿生</option>
+                        <option value="非寄宿生">非寄宿生</option>
+                    </select>
+                </div>
+                
+                <!-- 身份证图片上传 -->
+                <div class="form-group file-upload-container">
+                    <label class="required">身份证图片</label>
+                    <div class="file-upload-options">
+                        <div class="file-upload-option gallery-option" data-type="idCard">
+                            <i class="fas fa-folder-open"></i>
+                            <p>从相册选择</p>
+                            <span>选择已拍摄的照片</span>
+                        </div>
+                        <div class="file-upload-option camera-option" data-type="idCard">
+                            <i class="fas fa-camera"></i>
+                            <p>拍照上传</p>
+                            <span>使用摄像头拍摄</span>
+                        </div>
+                    </div>
+                    <div id="idCardUploadedFile" class="uploaded-file" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="uploaded-file-info">
+                            <div class="uploaded-file-name">身份证照片.jpg</div>
+                            <div class="uploaded-file-size">1.2 MB</div>
+                        </div>
+                        <button type="button" class="remove-file" data-type="idCard">&times;</button>
+                    </div>
+                </div>
+                
+                <!-- 社保卡图片上传 -->
+                <div class="form-group file-upload-container">
+                    <label class="required">社保卡图片</label>
+                    <div class="file-upload-options">
+                        <div class="file-upload-option gallery-option" data-type="socialCard">
+                            <i class="fas fa-folder-open"></i>
+                            <p>从相册选择</p>
+                            <span>选择已拍摄的照片</span>
+                        </div>
+                        <div class="file-upload-option camera-option" data-type="socialCard">
+                            <i class="fas fa-camera"></i>
+                            <p>拍照上传</p>
+                            <span>使用摄像头拍摄</span>
+                        </div>
+                    </div>
+                    <div id="socialCardUploadedFile" class="uploaded-file" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="uploaded-file-info">
+                            <div class="uploaded-file-name">社保卡照片.jpg</div>
+                            <div class="uploaded-file-size">1.5 MB</div>
+                        </div>
+                        <button type="button" class="remove-file" data-type="socialCard">&times;</button>
+                    </div>
+                </div>
+                
+                <!-- 资助申请表图片上传 -->
+                <div class="form-group file-upload-container">
+                    <label class="required">资助申请表图片</label>
+                    <div class="file-upload-options">
+                        <div class="file-upload-option gallery-option" data-type="applicationForm">
+                            <i class="fas fa-folder-open"></i>
+                            <p>从相册选择</p>
+                            <span>选择已拍摄的照片</span>
+                        </div>
+                        <div class="file-upload-option camera-option" data-type="applicationForm">
+                            <i class="fas fa-camera"></i>
+                            <p>拍照上传</p>
+                            <span>使用摄像头拍摄</span>
+                        </div>
+                    </div>
+                    <div id="applicationFormUploadedFile" class="uploaded-file" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="uploaded-file-info">
+                            <div class="uploaded-file-name">资助申请表照片.jpg</div>
+                            <div class="uploaded-file-size">0.8 MB</div>
+                        </div>
+                        <button type="button" class="remove-file" data-type="applicationForm">&times;</button>
+                    </div>
+                </div>
+                
+                <!-- 证明材料图片上传 -->
+                <div class="form-group file-upload-container" id="proofMaterialSection">
+                    <label>证明材料图片（非1-4类型需上传）</label>
+                    <div class="file-upload-options">
+                        <div class="file-upload-option gallery-option" data-type="proofMaterial">
+                            <i class="fas fa-folder-open"></i>
+                            <p>从相册选择</p>
+                            <span>选择已拍摄的照片</span>
+                        </div>
+                        <div class="file-upload-option camera-option" data-type="proofMaterial">
+                            <i class="fas fa-camera"></i>
+                            <p>拍照上传</p>
+                            <span>使用摄像头拍摄</span>
+                        </div>
+                    </div>
+                    <div id="proofMaterialUploadedFile" class="uploaded-file" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="uploaded-file-info">
+                            <div class="uploaded-file-name">证明材料照片.jpg</div>
+                            <div class="uploaded-file-size">1.1 MB</div>
+                        </div>
+                        <button type="button" class="remove-file" data-type="proofMaterial">&times;</button>
+                    </div>
+                </div>
+                
+                <!-- 额外材料上传 -->
+                <div class="form-group file-upload-container" id="extraMaterialSection">
+                    <label class="required">手写资助申请和家访照片（类型15需上传）</label>
+                    <div class="file-upload-options">
+                        <div class="file-upload-option gallery-option" data-type="extraMaterial">
+                            <i class="fas fa-folder-open"></i>
+                            <p>从相册选择</p>
+                            <span>选择已拍摄的照片</span>
+                        </div>
+                        <div class="file-upload-option camera-option" data-type="extraMaterial">
+                            <i class="fas fa-camera"></i>
+                            <p>拍照上传</p>
+                            <span>使用摄像头拍摄</span>
+                        </div>
+                    </div>
+                    <div id="extraMaterialUploadedFile" class="uploaded-file" style="display: none;">
+                        <i class="fas fa-check-circle"></i>
+                        <div class="uploaded-file-info">
+                            <div class="uploaded-file-name">手写申请和家访照片.jpg</div>
+                            <div class="uploaded-file-size">2.3 MB</div>
+                        </div>
+                        <button type="button" class="remove-file" data-type="extraMaterial">&times;</button>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="parentName" class="required">家长姓名</label>
+                            <input type="text" id="parentName" placeholder="请输入家长姓名">
+                        </div>
+                    </div>
+                    <div class="form-col">
+                        <div class="form-group">
+                            <label for="parentPhone" class="required">家长电话</label>
+                            <input type="tel" id="parentPhone" placeholder="请输入家长联系电话">
+                        </div>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 20px;">
+                    <i class="fas fa-check-circle"></i>确认申请
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- 拍照预览界面 -->
+    <div class="camera-preview" id="cameraPreview">
+        <video class="camera-video" id="cameraVideo" autoplay playsinline></video>
+        <div class="camera-controls">
+            <button class="camera-btn camera-cancel" id="cameraCancel">
+                <i class="fas fa-times"></i>
+            </button>
+            <button class="camera-btn camera-capture" id="cameraCapture">
+                <i class="fas fa-camera"></i>
+            </button>
+            <button class="camera-btn camera-flip" id="cameraFlip">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- 文件选择输入 -->
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+    
+    <div class="footer">
+        <p>伊川县教育体育局 版权所有 © 2023</p>
+        <p>技术支持：伊川县教育信息化中心</p>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            // 全局变量
+            const app = {
+                identityTypes: [
+                    "原建档立卡（脱贫户）学生",
+                    "原建档立卡（脱贫不稳定）学生",
+                    "边缘易致贫",
+                    "突发严重困难",
+                    "最低生活保障家庭学生",
+                    "低保边缘人口",
+                    "特困供养学生",
+                    "家长残疾",
+                    "支出型困难家庭学生",
+                    "其他低收入家庭学生",
+                    "孤儿学生",
+                    "事实无人抚养儿童",
+                    "学生本人残疾",
+                    "工会认定的困难职工家庭",
+                    "学校认定"
+                ],
+                mockStudentData: {
+                    name: "张小明",
+                    idNumber: "410329201501234567",
+                    school: "伊川县第一实验小学",
+                    stage: "小学",
+                    grade: "五年级",
+                    studentCode: "G410329201812345678"
+                },
+                selectedTypeIndex: -1,
+                currentCameraType: '',
+                stream: null,
+                useFrontCamera: true,
+                
+                // 文件类型名称映射
+                fileTypeNames: {
+                    idCard: '身份证图片',
+                    socialCard: '社保卡图片',
+                    applicationForm: '资助申请表图片',
+                    proofMaterial: '证明材料图片',
+                    extraMaterial: '手写资助申请和家访照片'
+                },
+                
+                // 初始化
+                init: function() {
+                    this.bindEvents();
+                },
+                
+                // 绑定事件
+                bindEvents: function() {
+                    // 查询学籍按钮
+                    $('#queryBtn').click(this.queryStudentInfo.bind(this));
+                    
+                    // 重置按钮
+                    $('#resetBtn').click(this.resetForm.bind(this));
+                    
+                    // 查询身份类型按钮
+                    $('#queryTypeBtn').click(this.queryIdentityType.bind(this));
+                    
+                    // 申请资助按钮
+                    $('#applyBtn').click(this.showApplicationForm.bind(this));
+                    
+                    // 关闭弹窗按钮
+                    $('#closeModalBtn').click(this.closeModal.bind(this));
+                    
+                    // 表单提交
+                    $('#applicationForm').submit(this.submitApplication.bind(this));
+                    
+                    // 拍照相关事件
+                    $('#cameraCancel').click(this.closeCamera.bind(this));
+                    $('#cameraCapture').click(this.capturePhoto.bind(this));
+                    $('#cameraFlip').click(this.flipCamera.bind(this));
+                    
+                    // 文件上传选项点击事件（委托事件）
+                    $(document).on('click', '.gallery-option', this.openGallery.bind(this));
+                    $(document).on('click', '.camera-option', this.openCamera.bind(this));
+                    $(document).on('click', '.remove-file', this.removeFile.bind(this));
+                    
+                    // 文件选择变化
+                    $('#fileInput').change(this.handleFileSelect.bind(this));
+                },
+                
+                // 查询学籍信息
+                queryStudentInfo: function() {
+                    const name = $('#studentName').val().trim();
+                    const idNumber = $('#idNumber').val().trim();
+                    
+                    if (!name || !idNumber) {
+                        alert('请输入姓名和身份证号');
+                        return;
+                    }
+                    
+                    // 模拟查询结果
+                    if (name === this.mockStudentData.name && idNumber === this.mockStudentData.idNumber) {
+                        $('#schoolName').text(this.mockStudentData.school);
+                        $('#stage').text(this.mockStudentData.stage);
+                        $('#grade').text(this.mockStudentData.grade);
+                        $('#studentCode').text(this.mockStudentData.studentCode);
+                        
+                        $('#studentInfo').show();
+                        $('#errorMessage').hide();
+                    } else {
+                        $('#studentInfo').hide();
+                        $('#errorMessage').show();
+                    }
+                },
+                
+                // 重置表单
+                resetForm: function() {
+                    $('#studentName, #idNumber').val('');
+                    $('#studentInfo, #errorMessage, #typeSelection, #applicationInfo').hide();
+                    this.selectedTypeIndex = -1;
+                },
+                
+                // 查询身份类型
+                queryIdentityType: function() {
+                    if ($('#studentInfo').css('display') !== 'block') {
+                        alert('请先查询学籍信息');
+                        return;
+                    }
+                    
+                    // 生成身份类型选项
+                    const typeGrid = $('#typeGrid');
+                    typeGrid.empty();
+                    
+                    $.each(this.identityTypes, (index, type) => {
+                        const typeItem = $(`
+                            <div class="type-item" data-index="${index}">
+                                <div class="type-num">${index + 1}</div>
+                                <span class="type-text">${type}</span>
+                            </div>
+                        `);
+                        
+                        typeGrid.append(typeItem);
+                    });
+                    
+                    // 委托事件处理
+                    $('#typeGrid').off('click', '.type-item').on('click', '.type-item', (e) => {
+                        const $item = $(e.currentTarget);
+                        const index = parseInt($item.data('index'));
+                        
+                        // 移除所有其他项的选中状态
+                        $('.type-item').removeClass('selected');
+                        
+                        // 选中当前项
+                        $item.addClass('selected');
+                        this.selectedTypeIndex = index;
+                        
+                        // 根据类型显示/隐藏材料上传区域
+                        this.toggleMaterialSections(index);
+                    });
+                    
+                    $('#typeSelection').show();
+                },
+                
+                // 切换材料上传区域显示
+                toggleMaterialSections: function(index) {
+                    // 类型15显示额外材料区域
+                    if (index === 14) {
+                        $('#extraMaterialSection').show();
+                    } else {
+                        $('#extraMaterialSection').hide();
+                    }
+                    
+                    // 类型5-14显示证明材料区域
+                    if (index >= 4 && index <= 13) {
+                        $('#proofMaterialSection').show();
+                    } else {
+                        $('#proofMaterialSection').hide();
+                    }
+                },
+                
+                // 显示申请表单
+                showApplicationForm: function() {
+                    if (this.selectedTypeIndex === -1) {
+                        alert('请选择一种身份类型');
+                        return;
+                    }
+                    
+                    // 填充学生信息
+                    $('#modalStudentName').val(this.mockStudentData.name);
+                    $('#modalSchoolName').val(this.mockStudentData.school);
+                    
+                    // 根据类型显示/隐藏材料区域
+                    this.toggleMaterialSections(this.selectedTypeIndex);
+                    
+                    $('#applicationModal').css('display', 'flex');
+                },
+                
+                // 关闭弹窗
+                closeModal: function() {
+                    $('#applicationModal').hide();
+                },
+                
+                // 提交申请
+                submitApplication: function(e) {
+                    e.preventDefault();
+                    
+                    // 验证表单
+                    if (!this.validateForm()) {
+                        return;
+                    }
+                    
+                    // 生成资助项目
+                    this.generateBenefits();
+                    
+                    // 显示申请结果
+                    $('#applicationInfo').show();
+                    
+                    // 关闭弹窗
+                    this.closeModal();
+                    
+                    // 重置表单
+                    $('#applicationForm')[0].reset();
+                    $('.uploaded-file').hide();
+                    
+                    // 滚动到结果区域
+                    $('html, body').animate({
+                        scrollTop: $('#applicationInfo').offset().top - 20
+                    }, 500);
+                },
+                
+                // 验证表单
+                validateForm: function() {
+                    const requiredFields = ['#modalGrade', '#modalClass', '#accommodation', '#parentName', '#parentPhone'];
+                    let isValid = true;
+                    
+                    $.each(requiredFields, (index, selector) => {
+                        if (!$(selector).val().trim()) {
+                            alert(`请填写${$(selector).prev('label').text().replace('*', '')}`);
+                            isValid = false;
+                            return false;
+                        }
+                    });
+                    
+                    if (!isValid) return false;
+                    
+                    // 验证必要文件
+                    const requiredFiles = ['idCard', 'socialCard', 'applicationForm'];
+                    for (let fileType of requiredFiles) {
+                        if (!$(`#${fileType}UploadedFile`).is(':visible')) {
+                            alert(`请上传${this.fileTypeNames[fileType]}`);
+                            return false;
+                        }
+                    }
+                    
+                    // 类型15需要额外材料
+                    if (this.selectedTypeIndex === 14 && !$('#extraMaterialUploadedFile').is(':visible')) {
+                        alert('请上传手写资助申请和家访照片');
+                        return false;
+                    }
+                    
+                    // 类型5-14需要证明材料
+                    if (this.selectedTypeIndex >= 4 && this.selectedTypeIndex <= 13 && !$('#proofMaterialUploadedFile').is(':visible')) {
+                        alert('请上传证明材料');
+                        return false;
+                    }
+                    
+                    return true;
+                },
+                
+                // 生成资助项目
+                generateBenefits: function() {
+                    const benefitList = $('#benefitList');
+                    benefitList.empty();
+                    
+                    // 获取学段和寄宿情况
+                    const stage = $('#stage').text();
+                    const accommodation = $('#accommodation').val();
+                    
+                    // 生活补助
+                    let livingAllowance = '';
+                    if (stage === '小学' && accommodation === '寄宿生') {
+                        livingAllowance = '小学寄宿生生活补助';
+                    } else if (stage === '小学' && accommodation === '非寄宿生') {
+                        livingAllowance = '小学非寄宿生生活补助';
+                    } else if (stage === '初中' && accommodation === '寄宿生') {
+                        livingAllowance = '初中寄宿生生活补助';
+                    } else if (stage === '初中' && accommodation === '非寄宿生') {
+                        livingAllowance = '初中非寄宿生生活补助';
+                    }
+                    
+                    if (livingAllowance) {
+                        benefitList.append(`
+                            <div class="benefit-item">
+                                <div class="benefit-title">${livingAllowance}</div>
+                                <div class="benefit-desc">根据您的学段和寄宿情况，您可享受此项补助</div>
+                            </div>
+                        `);
+                    }
+                    
+                    // 营养改善计划补助（类型1-2）
+                    if (this.selectedTypeIndex === 0 || this.selectedTypeIndex === 1) {
+                        benefitList.append(`
+                            <div class="benefit-item">
+                                <div class="benefit-title">营养改善计划补助</div>
+                                <div class="benefit-desc">根据您的身份类型（原建档立卡学生），您可享受此项补助</div>
+                            </div>
+                        `);
+                    }
+                },
+                
+                // 打开相册
+                openGallery: function(e) {
+                    const fileType = $(e.currentTarget).data('type');
+                    this.currentCameraType = fileType;
+                    
+                    // 触发文件选择
+                    $('#fileInput').click();
+                },
+                
+                // 打开摄像头
+                openCamera: function(e) {
+                    const fileType = $(e.currentTarget).data('type');
+                    this.currentCameraType = fileType;
+                    
+                    this.startCamera();
+                },
+                
+                // 启动摄像头
+                startCamera: function() {
+                    const constraints = {
+                        video: {
+                            facingMode: this.useFrontCamera ? "user" : "environment"
+                        }
+                    };
+                    
+                    navigator.mediaDevices.getUserMedia(constraints)
+                        .then((stream) => {
+                            this.stream = stream;
+                            $('#cameraVideo')[0].srcObject = stream;
+                            $('#cameraPreview').show();
+                        })
+                        .catch((err) => {
+                            console.error("摄像头错误:", err);
+                            alert('无法访问摄像头，请检查权限设置');
+                        });
+                },
+                
+                // 关闭摄像头
+                closeCamera: function() {
+                    if (this.stream) {
+                        this.stream.getTracks().forEach(track => track.stop());
+                        this.stream = null;
+                    }
+                    $('#cameraPreview').hide();
+                },
+                
+                // 拍照
+                capturePhoto: function() {
+                    const video = $('#cameraVideo')[0];
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    
+                    // 转换为Blob
+                    canvas.toBlob((blob) => {
+                        this.handleCapturedPhoto(blob);
+                        this.closeCamera();
+                    }, 'image/jpeg', 0.8);
+                },
+                
+                // 处理拍摄的照片
+                handleCapturedPhoto: function(blob) {
+                    if (!blob) return;
+                    
+                    // 创建文件名
+                    const fileName = `${this.fileTypeNames[this.currentCameraType]}_${new Date().getTime()}.jpg`;
+                    const fileSize = (blob.size / (1024 * 1024)).toFixed(1);
+                    
+                    // 显示上传的文件
+                    this.showUploadedFile(this.currentCameraType, fileName, fileSize);
+                },
+                
+                // 切换摄像头
+                flipCamera: function() {
+                    this.useFrontCamera = !this.useFrontCamera;
+                    this.closeCamera();
+                    setTimeout(() => this.startCamera(), 100);
+                },
+                
+                // 处理文件选择
+                handleFileSelect: function(e) {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    const fileName = file.name;
+                    const fileSize = (file.size / (1024 * 1024)).toFixed(1);
+                    
+                    this.showUploadedFile(this.currentCameraType, fileName, fileSize);
+                    
+                    // 重置文件输入
+                    $('#fileInput').val('');
+                },
+                
+                // 显示已上传文件
+                showUploadedFile: function(fileType, fileName, fileSize) {
+                    $(`#${fileType}UploadedFile .uploaded-file-name`).text(fileName);
+                    $(`#${fileType}UploadedFile .uploaded-file-size`).text(`${fileSize} MB`);
+                    $(`#${fileType}UploadedFile`).show();
+                },
+                
+                // 移除文件
+                removeFile: function(e) {
+                    const fileType = $(e.currentTarget).data('type');
+                    $(`#${fileType}UploadedFile`).hide();
+                }
+            };
+            
+            // 初始化应用
+            app.init();
+        });
+    </script>
+</body>
+</html>
