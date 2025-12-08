@@ -6,6 +6,7 @@
     <title>伊川县中小学生资助申报系统</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         * {
             margin: 0;
@@ -853,9 +854,25 @@
     </div>
 
     <script>
+        // const supabase = createClient('https://iahslahydlrdryabhbqd.supabase.co', 'sb_publishable_dqZyMmTlTBDCh2jZmCJ9Lg_jn_H3ox4');
+        // const { data, error } = supabase
+        // .from('tbStudent')        
+        // .select('*')
+        // .eq("xm", "苗雅祺")
+        // .eq("sfzjh", "410329201707250422")
+        // .single();
+
+        // console.log(data);
+
         $(document).ready(function() {
             // 全局变量
             const app = {
+                // Supabase配置
+                supabase: null,
+                supabaseConfig: {
+                    supabaseUrl: 'https://iahslahydlrdryabhbqd.supabase.co',  // 替换为您的Supabase URL
+                    supabaseKey: 'sb_publishable_dqZyMmTlTBDCh2jZmCJ9Lg_jn_H3ox4'                      // 替换为您的Supabase匿名密钥
+                },
                 identityTypes: [
                     "原建档立卡（脱贫户）学生",
                     "原建档立卡（脱贫不稳定）学生",
@@ -872,6 +889,22 @@
                     "学生本人残疾",
                     "工会认定的困难职工家庭",
                     "学校认定"
+                ],
+                knlx : [
+                    { code: "jdlkpkh", name: "原建档立卡（脱贫户）学生" },
+                    { code: "tpbwd", name: "原建档立卡（脱贫不稳定）学生" },
+                    { code: "yzp", name: "边缘易致贫" },
+                    { code: "tfyzkn", name: "突发严重困难" },
+                    { code: "cxdb", name: "最低生活保障家庭学生" },
+                    { code: "dbby", name: "低保边缘人口" },
+                    { code: "tkjz", name: "特困供养学生" },
+                    { code: "zcx", name: "支出型困难家庭学生" },
+                    { code: "qtdsr", name: "其他低收入家庭学生" },
+                    { code: "ge", name: "孤儿学生" },
+                    { code: "sswrfy", name: "事实无人抚养儿童" },
+                    { code: "cjr", name: "学生本人残疾" },
+                    { code: "cjrzn", name: "家长残疾" },
+                    { code: "yfdx", name: "优抚对象" }
                 ],
                 mockStudentData: {
                     name: "张小明",
@@ -897,9 +930,25 @@
                 
                 // 初始化
                 init: function() {
+                    // 初始化Supabase客户端
+                    this.initSupabase();
                     this.bindEvents();
                 },
-                
+                // 初始化Supabase
+                initSupabase: async function() {
+                    try {
+                        // 创建Supabase客户端
+                        this.supabase = supabase.createClient(
+                            this.supabaseConfig.supabaseUrl,
+                            this.supabaseConfig.supabaseKey
+                        );
+                        
+                        console.log('Supabase客户端初始化成功');
+                    } catch (error) {
+                        console.error('Supabase初始化失败:', error);
+                        this.showError('数据库连接失败，请检查网络连接');
+                    }
+                },
                 // 绑定事件
                 bindEvents: function() {
                     // 查询学籍按钮
@@ -935,7 +984,7 @@
                 },
                 
                 // 查询学籍信息
-                queryStudentInfo: function() {
+                queryStudentInfo:async function() {
                     const name = $('#studentName').val().trim();
                     const idNumber = $('#idNumber').val().trim();
                     
@@ -944,12 +993,24 @@
                         return;
                     }
                     
-                    // 模拟查询结果
-                    if (name === this.mockStudentData.name && idNumber === this.mockStudentData.idNumber) {
-                        $('#schoolName').text(this.mockStudentData.school);
-                        $('#stage').text(this.mockStudentData.stage);
-                        $('#grade').text(this.mockStudentData.grade);
-                        $('#studentCode').text(this.mockStudentData.studentCode);
+                    const {data,error} = await this.supabase
+                        .from('tbStudent')        
+                        .select('*')
+                        .eq("xm", name)
+                        .eq("sfzjh", idNumber)
+                        .single();
+                    
+                    if(null == data){
+                        $('#studentInfo').hide();
+                        $('#errorMessage').show();
+                        return;
+                    }
+
+                    if (name === data.xm && idNumber === data.sfzjh) {
+                        $('#schoolName').text(data.schoolid);
+                        $('#stage').text(data.jyjdmc);
+                        $('#grade').text(data.njmc);
+                        $('#studentCode').text(data.xjh);
                         
                         $('#studentInfo').show();
                         $('#errorMessage').hide();
@@ -967,7 +1028,10 @@
                 },
                 
                 // 查询身份类型
-                queryIdentityType: function() {
+                queryIdentityType: async function() {
+                    const name = $('#studentName').val().trim();
+                    const idNumber = $('#idNumber').val().trim();
+
                     if ($('#studentInfo').css('display') !== 'block') {
                         alert('请先查询学籍信息');
                         return;
@@ -976,18 +1040,40 @@
                     // 生成身份类型选项
                     const typeGrid = $('#typeGrid');
                     typeGrid.empty();
+
+                    const {data,error} = await this.supabase
+                        .from('tbKNXS')        
+                        .select('*')
+                        .eq("xm", name)
+                        .eq("sfzjh", idNumber)
+                        .single();
                     
-                    $.each(this.identityTypes, (index, type) => {
+                    //未查询到困难类型，如果要资助需要按学校认定家庭经济困难类型处理
+                    if(null == data){
                         const typeItem = $(`
-                            <div class="type-item" data-index="${index}">
-                                <div class="type-num">${index + 1}</div>
-                                <span class="type-text">${type}</span>
+                            <div class="type-item" data-index="14">
+                                <div class="type-num">15</div>
+                                <span class="type-text">学校认定</span>
                             </div>
                         `);
                         
                         typeGrid.append(typeItem);
-                    });
-                    
+                    }
+                    else{
+                        $.each(this.knlx, (index, typeIndex) => {
+                            if(data[typeIndex.code] !== 1){
+                                return; //跳过未选中的类型
+                            }
+                            const typeItem = $(`
+                                <div class="type-item" data-index="${index}">
+                                    <div class="type-num">${parseInt(index) + 1}</div>
+                                    <span class="type-text">${typeIndex.name}</span>
+                                </div>
+                            `);                            
+                            typeGrid.append(typeItem);
+                        });
+                    }
+                   
                     // 委托事件处理
                     $('#typeGrid').off('click', '.type-item').on('click', '.type-item', (e) => {
                         const $item = $(e.currentTarget);
