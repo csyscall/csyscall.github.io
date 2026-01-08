@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>图片转PDF</title>
+  <style>
+    .img-picker {
+      margin: 1rem 0;
+    }
+
+    .img-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .img-thumb {
+      width: 120px;
+      height: 120px;
+      object-fit: cover;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
+    .thumb-wrap {
+      position: relative;
+      display: inline-block;
+    }
+
+    .thumb-remove {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+
+    /* PDF progress */
+    #progressContainer {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    #pdfProgress {
+      width: 240px;
+      height: 14px;
+    }
+
+    #pdfProgressText {
+      margin-left: 8px;
+      font-size: 0.9rem;
+    }
+
+    /* limit number input width */
+    input[type="number"] {
+      width: 50px;
+    }
+
+    /* Lightbox */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .lightbox[aria-hidden="false"] {
+      display: flex;
+    }
+
+    .lightbox-img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 6px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: none;
+      border-radius: 20px;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+  <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/compressorjs@1.2.1/dist/compressor.min.js"></script>
+</head>
+
+<body>
+  <header>
+    <h1>图片转PDF</h1>
+  </header>
+  <main>
+    <section>
+      <label class="img-picker">
+        <input id="imageInput" type="file" accept="image/*" multiple>
+      </label>
+      <div id="preview" class="img-preview" aria-live="polite"></div>
+      <!-- Lightbox for enlarged preview -->
+      <div id="lightbox" class="lightbox" role="dialog" aria-hidden="true">
+        <button id="lightboxClose" class="lightbox-close" aria-label="关闭">×</button>
+        <img id="lightboxImg" class="lightbox-img" alt="放大预览" src="">
+      </div>
+      <div>
+        <label>
+          <input type="checkbox" id="imgEnhance"> 图像增强
+        </label>
+        <!--添加图片压缩选项和压缩参数选择-->
+        <label>
+          <input type="checkbox" id="compressImages"> 压缩图片
+        </label>
+        <div id="compressOptions" style="display: none; margin-top: 8px;">
+          <label>质量 (0.1-1.0):</label>
+          <input type="number" id="quality" min="0.1" max="1.0" step="0.1" value="0.8">
+          <label>最大宽度:</label>
+          <input type="number" id="maxWidth" value="1920">
+          <label>最大高度:</label>
+          <input type="number" id="maxHeight" value="1920">
+        </div>
+        <div style="margin-top: 8px;"><input type="button" id="img2pdf" value="制作PDF"></div>
+
+        <div id="progressContainer">
+          <progress id="pdfProgress" value="0" max="100"></progress>
+          <span id="pdfProgressText">0%</span>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>syscall制作 © 2026</p>
+  </footer>
+  <script>
+    // 图片选择与缩略图预览脚本
+    (function () {
+      const input = document.getElementById('imageInput');
+      const preview = document.getElementById('preview');
+      const filesMap = new Map();
+
+      // Lightbox elements & handlers
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightboxImg');
+      const lightboxClose = document.getElementById('lightboxClose');
+
+      function openLightbox(src, alt) {
+        lightboxImg.src = src;
+        lightboxImg.alt = alt || '';
+        lightbox.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+        lightboxClose.focus();
+      }
+
+      function closeLightbox() {
+        lightbox.setAttribute('aria-hidden', 'true');
+        lightboxImg.src = '';
+        document.body.style.overflow = '';
+      }
+
+      lightboxClose.addEventListener('click', closeLightbox);
+      lightbox.addEventListener('click', (e) => { if (e.target === lightbox) closeLightbox(); });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeLightbox(); });
+
+      function createThumb(file) {
+        const url = URL.createObjectURL(file);
+        const wrap = document.createElement('div');
+        wrap.className = 'thumb-wrap';
+
+        const img = document.createElement('img');
+        img.className = 'img-thumb';
+        img.src = url;
+        img.alt = file.name;
+        img.style.cursor = 'zoom-in';
+        img.addEventListener('click', () => { openLightbox(url, file.name); });
+
+        const btn = document.createElement('button');
+        btn.className = 'thumb-remove';
+        btn.type = 'button';
+        btn.textContent = '×';
+        btn.title = '移除';
+        btn.addEventListener('click', () => {
+          filesMap.delete(file.name + file.size + file.lastModified);
+          URL.revokeObjectURL(url);
+          wrap.remove();
+        });
+
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        return { wrap, key: file.name + file.size + file.lastModified };
+      }
+
+      input.addEventListener('change', (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach(file => {
+          if (!file.type.startsWith('image/')) return;
+          const metaKey = file.name + file.size + file.lastModified;
+          if (filesMap.has(metaKey)) return; // avoid duplicates
+          const { wrap, key } = createThumb(file);
+          preview.appendChild(wrap);
+          filesMap.set(key, { file, url: wrap.querySelector('img').src });
+        });
+        // reset input to allow selecting same file again if removed
+        input.value = '';
+      });
+    })();
+    // 图片转PDF脚本（带进度显示）
+    (function () {
+      const btn = document.getElementById('img2pdf');
+      const progressContainer = document.getElementById('progressContainer');
+      const progressEl = document.getElementById('pdfProgress');
+      const progressText = document.getElementById('pdfProgressText');
+
+      document.getElementById('compressImages').addEventListener('change', (e) => {
+        document.getElementById('compressOptions').style.display = e.target.checked ? 'block' : 'none';
+      });
+
+
+
+      function setProgress(p) {
+        const v = Math.max(0, Math.min(100, Math.round(p)));
+        progressEl.value = v;
+        progressText.textContent = v + '%';
+      }
+
+      function blobToBase64(blob) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = error => reject(error);
+        });
+      }
+
+      function base64ToBlob(base64Data, contentType = '') {
+        // 提取纯base64字符串
+        const base64 = base64Data.split(',').pop();
+
+        const binaryString = atob(base64);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        return new Blob([bytes], { type: contentType });
+      }
+
+      btn.addEventListener('click', async () => {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF();
+        const preview = document.getElementById('preview');
+        const thumbs = preview.querySelectorAll('.thumb-wrap img');
+
+        if (thumbs.length === 0) {
+          alert('请先选择图片');
+          return;
+        }
+
+        // show progress
+        progressContainer.style.display = 'flex';
+        btn.disabled = true;
+        setProgress(0);
+
+        const totalSteps = thumbs.length * 3 + 1; // fetch/compress/load per image + pdf save
+        let doneSteps = 0;
+
+        try {
+          for (let i = 0; i < thumbs.length; i++) {
+            const img = thumbs[i];
+
+            // 1) fetch
+            const blob = await fetch(img.src).then(r => r.blob());
+            doneSteps++; setProgress((doneSteps / totalSteps) * 100);
+
+            // 2) compress (if enabled)
+            const compressChecked = document.getElementById('compressImages').checked;
+            let useBlob = blob;
+            if (compressChecked && window.Compressor) {
+              const quality = parseFloat(document.getElementById('quality').value) || 0.8;
+              const maxWidth = parseInt(document.getElementById('maxWidth').value) || 1920;
+              const maxHeight = parseInt(document.getElementById('maxHeight').value) || 1920;
+              useBlob = await new Promise((resolve, reject) => {
+                new Compressor(blob, {
+                  quality, maxWidth, maxHeight, convertSize: Infinity, mimeType: 'image/webp',
+                  success(result) { resolve(result); }, error(err) { resolve(blob); }
+                });
+              });
+            }
+
+
+            doneSteps++; setProgress((doneSteps / totalSteps) * 100);
+
+            //图像增强（如果启用）
+            const imgEnhanceChecked = document.getElementById('imgEnhance').checked;
+            if (imgEnhanceChecked) {
+              //将blob转换为base64以便上传
+              const base64Data = await blobToBase64(useBlob);
+              const response = await fetch('https://iahslahydlrdryabhbqd.supabase.co/functions/v1/hello-world/process_image', {
+                method: 'POST',
+                body: JSON.stringify({
+                  image: base64Data.split(',')[1],  // 只发送base64数据部分
+                  serviceType: 'scan'
+                }),
+                headers: { 'Authorization': 'Bearer sb_publishable_dqZyMmTlTBDCh2jZmCJ9Lg_jn_H3ox4' ,
+                        'apikey': 'sb_publishable_dqZyMmTlTBDCh2jZmCJ9Lg_jn_H3ox4' ,'Content-Type': 'application/json' }
+              });
+
+              resjson = await response.json();
+              if (response.ok) {
+                //将返回的base64转换回blob
+                const processedBlob = base64ToBlob(resjson.data.ImageInfo[0].ImageBase64, useBlob.type);
+                useBlob = processedBlob;
+              } else {
+                console.error('Image processing failed:', resjson);
+                alert('图像处理失败，使用原始图像。');
+              }
+            }
+
+            // 3) load image and add to pdf
+            const imgURL = URL.createObjectURL(useBlob);
+            const image = new Image();
+            image.src = imgURL;
+            await new Promise((resolve) => {
+              image.onload = () => {
+                const imgWidth = pdf.internal.pageSize.getWidth();
+                const imgHeight = (image.height * imgWidth) / image.width;
+                if (i > 0) pdf.addPage();
+                // choose format based on blob type
+                const mime = useBlob.type || 'image/png';
+                let fmt = 'PNG';
+                if (mime.indexOf('webp') !== -1) fmt = 'WEBP';
+                pdf.addImage(image, fmt, 0, 0, imgWidth, imgHeight);
+                URL.revokeObjectURL(imgURL);
+                resolve();
+              };
+              image.onerror = () => { URL.revokeObjectURL(imgURL); resolve(); };
+            });
+            doneSteps++; setProgress((doneSteps / totalSteps) * 100);
+          }
+
+          // finalize
+          setProgress(95);
+          await new Promise(r => setTimeout(r, 250));
+          pdf.save('images.pdf');
+          doneSteps++; setProgress((doneSteps / totalSteps) * 100);
+          setProgress(100);
+
+          //清空预览区和文件列表
+          preview.innerHTML = '';
+
+          //清除图像增强和压缩选项
+          document.getElementById('imgEnhance').checked = false;
+          document.getElementById('compressImages').checked = false;
+          document.getElementById('compressOptions').style.display = 'none';
+
+        } catch (err) {
+          console.error(err);
+          alert('制作 PDF 时发生错误，查看控制台以获取更多信息。');
+        } finally {
+          btn.disabled = false;
+          setTimeout(() => { progressContainer.style.display = 'none'; setProgress(0); }, 800);
+        }
+      });
+    })();
+  </script>
+</body>
+
+</html>
