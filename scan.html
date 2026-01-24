@@ -468,7 +468,7 @@
                     }                    
 
                     // 处理Word/Excel下载
-                    if((data.data.TypesetInfo || data.data.TypesetInfo.length > 0) ){
+                    if((data.data.TypesetInfo) ){
                         resultActions.style.display = 'block';
 
                         const filebase64 = data.data.TypesetInfo[0].FileBase64
@@ -517,4 +517,5 @@
     </script>
     
 </body>
+
 </html>
